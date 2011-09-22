@@ -3,6 +3,7 @@
 <?php
 require_once('tln-config.php');
 require_once('TlnData.php');
+require_once('Job.php');
 
 $db = new mysqli(TLNDBHOST, TLNDBUSER, TLNDBPASS, TLNDBNAME);
 
