@@ -10,8 +10,8 @@ class TlnData {
 		$starttime = time();
 		$sql = 'CREATE TABLE tln_import (
 			tln_import_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,	
-			date CHAR(10) NOT NULL,
-			tick CHAR(8) NOT NULL,
+			date date NOT NULL,
+			tick time NOT NULL,
 			timezone VARCHAR(16) NOT NULL,
 			MACB CHAR(4) NOT NULL,
 			source VARCHAR(25) NOT NULL,
@@ -19,10 +19,10 @@ class TlnData {
 			type VARCHAR(50) NOT NULL,
 			user VARCHAR(25) NOT NULL,
 			host VARCHAR(25) NOT NULL,
-			short VARCHAR(255) NOT NULL,
-			description VARCHAR(255) NOT NULL,
+			short VARCHAR(1000) NOT NULL,
+			description VARCHAR(1000) NOT NULL,
 			version VARCHAR(7) NOT NULL,
-			filename VARCHAR(255) NOT NULL,
+			filename VARCHAR(510) NOT NULL,
 			inode VARCHAR(25) NOT NULL,
 			notes VARCHAR(255) NOT NULL,
 			format VARCHAR(50) NOT NULL,
@@ -112,20 +112,21 @@ class TlnData {
 			tln_date_id BIGINT UNSIGNED NOT NULL,
 			tln_time_id BIGINT UNSIGNED NOT NULL,
 	    	tln_source_id BIGINT UNSIGNED NOT NULL,
+	    	count BIGINT UNSIGNED NOT NULL,
 	    	MACB CHAR(4) NOT NULL,
 	    	type VARCHAR(50) NOT NULL,
 			user VARCHAR(25) NOT NULL,
 			host VARCHAR(25) NOT NULL,
-			short VARCHAR(255) NOT NULL,
-			description VARCHAR(255) NOT NULL,
+			short VARCHAR(1000) NOT NULL,
+			description VARCHAR(1000) NOT NULL,
 			version VARCHAR(7) NOT NULL,
-			filename VARCHAR(255) NOT NULL,
+			filename VARCHAR(1000) NOT NULL,
 			inode VARCHAR(25) NOT NULL,
 			notes VARCHAR(255) NOT NULL,
 			format VARCHAR(50) NOT NULL,
 			extra  VARCHAR(255) NOT NULL,
 			PRIMARY KEY (tln_fact_id),		
-			UNIQUE KEY tln_fact_uniq(tln_date_id, tln_time_id, tln_source_id),
+			UNIQUE KEY tln_fact_uniq(tln_date_id, tln_time_id, tln_source_id, macb, description(255), filename(255), inode),
 			FOREIGN KEY (tln_date_id) REFERENCES tln_date(tln_date_id),
 			FOREIGN KEY (tln_time_id) REFERENCES tln_time(tln_time_id),
 			FOREIGN KEY (tln_source_id) REFERENCES tln_source(tln_source_id)
@@ -200,6 +201,31 @@ class TlnData {
 		}
 		$endtime = time();
 		print $db->affected_rows . ' rows added to \'tln_version\' in ' . gmdate('H:i:s', $endtime - $starttime) . "<br />";
+	}
+	function fill_source() {
+		$starttime = time();
+		$sql = "insert ignore into tln_source (source, sourcetype)\n"
+			. "select distinct source, sourcetype\n"
+			. "from tln_import";
+		if (! $db->query($sql)) {
+			die('Error filling table: ' . $db->error . "<br />");
+		}
+		$endtime = time();
+		print $db->affected_rows . ' rows added to \'tln_source\' in ' . gmdate('H:i:s', $endtime - $starttime) . "<br />";
+	}
+	function fill_fact() {/*
+		mysql> insert into tln_fact(tln_date_id, tln_time_id, tln_source_id, count, macb
+, type, user, host, short, description, version, filename, inode, notes, format,
+ extra)
+    -> select d.tln_date_id, t.tln_time_id, s.tln_source_id, count(*), i.macb, i
+.type, i.user, i.host, i.short, i.description, i.version, i.filename, i.inode, i
+.notes, i.format, i.extra
+    -> from tln_date d, tln_time t, tln_source s, tln_import i
+    -> where d.date = i.date and t.tick = i.tick and s.source = i.source and s.s
+ourcetype = i.sourcetype
+    -> group by d.tln_date_id, t.tln_time_id, s.tln_source_id, i.macb, substring
+(i.description,255), substring(i.filename,255), i.inode;
+    */
 	}
 }
 ?>
