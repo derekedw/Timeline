@@ -1,9 +1,13 @@
 <?php
 
+require_once('Job.php');
+
 class TlnData {
 	
 	public function __construct(&$db) {
 		$this->db = $db;
+		$this->maxInsert = 2501;
+		date_default_timezone_set("GMT");
 	}
 	
 	function create_import() {
@@ -27,14 +31,17 @@ class TlnData {
 			notes VARCHAR(255) NOT NULL,
 			format VARCHAR(50) NOT NULL,
 			extra  VARCHAR(255) NOT NULL,
+			concurrency BIGINT UNSIGNED NOT NULL,
 			PRIMARY KEY (tln_import_id)
 		)';
 		if ($this->db->query($sql) == TRUE) {
 			$endtime = time();
 			print 'Created \'tln_import\' table in ' . gmdate('H:i:s', $endtime - $starttime) . "<br />";
 		} else {
-			die('Error creating \'tln_import\' table: ' . $this->db->error . "<br />");
+			print ('Error creating \'tln_import\' table: ' . $this->db->error . "<br />");
+			return false;
 		}
+		return true;
 	}
 	
 	function create_date() {
@@ -52,7 +59,8 @@ class TlnData {
 			$endtime = time();
 			print 'Created \'tln_date\' table in ' . gmdate('H:i:s', $endtime - $starttime) . "<br />";
 		} else {
-			die('Error creating \'tln_date\' table: ' . $this->db->error . "<br />");
+			print ('Error creating \'tln_date\' table: ' . $this->db->error . "<br />");
+			return false;
 		}
 	}
 	function create_time() {
@@ -71,8 +79,10 @@ class TlnData {
 			$endtime = time();
 			print 'Created \'tln_time\' table in ' . gmdate('H:i:s', $endtime - $starttime) . "<br />";
 		} else {
-			die('Error creating \'tln_time\' table: ' . $this->db->error . "<br />");
+			print ('Error creating \'tln_time\' table: ' . $this->db->error . "<br />");
+			return false;
 		}
+		return true;
 	}
 	function create_version() {
 		$starttime = time();
@@ -85,8 +95,10 @@ class TlnData {
 			$endtime = time();
 			print 'Created \'tln_version\' table in ' . gmdate('H:i:s', $endtime - $starttime) . "<br />";
 		} else {
-			die('Error creating \'tln_version\' table: ' . $this->db->error . "<br />");
+			print ('Error creating \'tln_version\' table: ' . $this->db->error . "<br />");
+			return false;
 		}
+		return true;
 	}
 	
 	function create_source() {
@@ -95,15 +107,18 @@ class TlnData {
 			tln_source_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			source VARCHAR(25) NOT NULL,
 			sourcetype VARCHAR(25) NOT NULL,
+	    	type VARCHAR(50) NOT NULL,
 			PRIMARY KEY (tln_source_id),
-			UNIQUE (source, sourcetype)
+			UNIQUE (source, sourcetype, type)
 		)';
 		if ($this->db->query($sql) == TRUE) {
 			$endtime = time();
 			print 'Created \'tln_source\' table in ' . gmdate('H:i:s', $endtime - $starttime) . "<br />";
 		} else {
-			die('Error creating \'tln_source\' table: ' . $this->db->error . "<br />");
+			print ('Error creating \'tln_source\' table: ' . $this->db->error . "<br />");
+			return false;
 		}
+		return true;
 	}
 	function create_fact() {
 		$starttime = time();
@@ -114,7 +129,6 @@ class TlnData {
 	    	tln_source_id BIGINT UNSIGNED NOT NULL,
 	    	count BIGINT UNSIGNED NOT NULL,
 	    	MACB CHAR(4) NOT NULL,
-	    	type VARCHAR(50) NOT NULL,
 			user VARCHAR(25) NOT NULL,
 			host VARCHAR(25) NOT NULL,
 			short VARCHAR(1000) NOT NULL,
@@ -135,8 +149,10 @@ class TlnData {
 			$endtime = time();
 			print 'Created \'tln_fact\' table in ' . gmdate('H:i:s', $endtime - $starttime) . "<br />";
 		} else {
-			die('Error creating \'tln_fact\' table: ' . $this->db->error . "<br />");
+			print ('Error creating \'tln_fact\' table: ' . $this->db->error . "<br />");
+			return false;
 		}
+		return true;
 	}
 	
 	function fill_date() {
@@ -154,18 +170,21 @@ class TlnData {
 				'DAY(\'' . gmdate('Y-m-d', $timestamp) . '\')')) . ')');
 			if (0 == ($i % 3600)) {
 				if (! $this->db->query($sql . implode(",\n", $rows))) {
-					die('Error filling table: ' . $this->db->error . "<br />");
+					print ('Error filling table: ' . $this->db->error . "<br />");
+					return false;
 				}
 				$count += $this->db->affected_rows;
 				$rows = array();
 			}
 		}
 		if (! $this->db->query($sql . implode(",\n", $rows))) {
-			die('Error filling table: ' . $this->db->error . "<br />");
+			print ('Error filling table: ' . $this->db->error . "<br />");
+			return false;
 		}
 		$endtime = time();
 		$count += $this->db->affected_rows;
 		print $count . ' rows added to \'tln_date\' in ' . gmdate('H:i:s', $endtime - $starttime) . "<br />";
+		return true;
 	}
 	
 	function fill_time() {
@@ -179,53 +198,212 @@ class TlnData {
 			gmdate('H:i:s', intval($i/60)*60), gmdate('H:i:s', intval($i/6)*6))) . '\')');
 			if (0 == ($i % 3600)) {
 				if (! $this->db->query($sql . implode(",\n", $rows))) {
-					die('Error filling table: ' . $this->db->error . "<br />");
+					print('Error filling table: ' . $this->db->error . "<br />");
+					return false;
 				}
 				$count += $this->db->affected_rows;
 				$rows = array();
 			}
 		}
 		if (! $this->db->query($sql . implode(",\n", $rows))) {
-			die('Error filling table: ' . $this->db->error . "<br />");
+			print ('Error filling table: ' . $this->db->error . "<br />");
+			return false;
 		}
 		$endtime = time();
 		$count += $this->db->affected_rows;
 		print $count . ' rows added to \'tln_time\' in ' . gmdate('H:i:s', $endtime - $starttime) . "<br />";
+		return true;
 	}
 	
-	function fill_version($db) {
+	function fill_version() {
 		$starttime = time();
 		$sql = 'insert into tln_version (version) values(1)';
-		if (! $db->query($sql)) {
-			die('Error filling table: ' . $db->error . "<br />");
+		if (! $this->db->query($sql)) {
+			print ('Error filling table: ' . $this->db->error . "<br />");
+			return false;
 		}
 		$endtime = time();
-		print $db->affected_rows . ' rows added to \'tln_version\' in ' . gmdate('H:i:s', $endtime - $starttime) . "<br />";
+		print $this->db->affected_rows . ' rows added to \'tln_version\' in ' . gmdate('H:i:s', $endtime - $starttime) . "<br />";
+		return true;
 	}
-	function fill_source() {
+	private function fill_source() {
 		$starttime = time();
-		$sql = "insert ignore into tln_source (source, sourcetype)\n"
-			. "select distinct source, sourcetype\n"
+		$sql = "insert ignore into tln_source (source, sourcetype, type)\n"
+			. "select distinct source, sourcetype, type\n"
 			. "from tln_import";
-		if (! $db->query($sql)) {
-			die('Error filling table: ' . $db->error . "<br />");
+		if (! $this->db->query($sql)) {
+			print ('Error filling table: ' . $this->db->error . "\n");
+			return false;
 		}
 		$endtime = time();
-		print $db->affected_rows . ' rows added to \'tln_source\' in ' . gmdate('H:i:s', $endtime - $starttime) . "<br />";
+		print $this->db->affected_rows . ' rows added to \'tln_source\' in ' . gmdate('H:i:s', $endtime - $starttime) . "\n";
+		return true;
 	}
-	function fill_fact() {/*
-		mysql> insert into tln_fact(tln_date_id, tln_time_id, tln_source_id, count, macb
-, type, user, host, short, description, version, filename, inode, notes, format,
- extra)
-    -> select d.tln_date_id, t.tln_time_id, s.tln_source_id, count(*), i.macb, i
-.type, i.user, i.host, i.short, i.description, i.version, i.filename, i.inode, i
-.notes, i.format, i.extra
-    -> from tln_date d, tln_time t, tln_source s, tln_import i
-    -> where d.date = i.date and t.tick = i.tick and s.source = i.source and s.s
-ourcetype = i.sourcetype
-    -> group by d.tln_date_id, t.tln_time_id, s.tln_source_id, i.macb, substring
-(i.description,255), substring(i.filename,255), i.inode;
-    */
+	private function fill_fact() {
+		$starttime = time();
+		$sql = 'insert ignore into tln_fact(tln_date_id, tln_time_id, tln_source_id, count, macb, user, host, short, description, version, filename, inode, notes, format, extra)
+    			select d.tln_date_id, t.tln_time_id, s.tln_source_id, count(*), i.macb, i.user, i.host, i.short, i.description, i.version, i.filename, i.inode, i.notes, i.format, i.extra
+    			from tln_date d, tln_time t, tln_source s, tln_import i
+    			where d.date = i.date and t.tick = i.tick and s.source = i.source and s.sourcetype = i.sourcetype and s.type = i.type
+    			group by d.tln_date_id, t.tln_time_id, s.tln_source_id, i.macb, substring(i.description,255), substring(i.filename,255), i.inode';
+		if (! $this->db->query($sql)) {
+			print('Error filling table: ' . $this->db->error . "\n");
+			return false;
+		}
+		$endtime = time();
+		print $this->db->affected_rows . ' rows added to \'tln_fact\' in ' . gmdate('H:i:s', $endtime - $starttime) . "\n";
+		return true;
+	}
+	private function fill_import($concurrency, &$text) {
+		$starttime = time();
+		$inserted = 0;
+		$skipped = 0;
+		$dup = 0;
+		$count = 0;
+		$rows = array();
+		$sql = "insert into tln_import (date,tick,timezone,MACB,source,sourcetype,type,user,host,short,description,version,filename,inode,notes,format,extra,concurrency) values\n";
+		foreach(preg_split('/\n/', $text) as $input) {
+			if (! $this->validate_content($input)) {
+				print "Invalid entry: '" . $input . "'\n";
+				$skipped++;
+				continue;
+			}
+			$elements = explode(',', trim($input));
+			if ((count($elements)) != 17) {
+				// discard this row as a duplicate.  Alternatively, you could:  array_splice($elements, 6, 2);
+				$dup++;
+				continue;
+			}
+			// date,tick,timezone,MACB,source,sourcetype,type,user,host,short,desc,version,filename,inode,notes,format,extra
+			$rows[] = '(\'' . implode('\', \'', array(	
+				gmdate('Y-m-d', strtotime($elements[0])),						// date
+				gmdate('H:i:s', strtotime($elements[1])),						// tick 
+				$elements[2], 													// timezone
+				$elements[3], 													// MACB
+				mysqli_real_escape_string($this->db, $elements[4]),				// source
+				mysqli_real_escape_string($this->db, $elements[5]),				// sourcetype
+				mysqli_real_escape_string($this->db, $elements[6]),				// type
+				mysqli_real_escape_string($this->db, $elements[7]),				// user
+				mysqli_real_escape_string($this->db, $elements[8]),				// host
+				mysqli_real_escape_string($this->db, $elements[9]),				// short
+				mysqli_real_escape_string($this->db, $elements[10]),			// desc
+				mysqli_real_escape_string($this->db, $elements[11]),			// version
+				mysqli_real_escape_string($this->db, $elements[12]),			// filename
+				mysqli_real_escape_string($this->db, $elements[13]),			// inode
+				mysqli_real_escape_string($this->db, $elements[14]),			// notes
+				mysqli_real_escape_string($this->db, $elements[15]),			// format
+				mysqli_real_escape_string($this->db, $elements[16]))) . '\', ' .	// extra
+				$concurrency . ')';												// concurrency	
+			$count++;
+			if (0 == ($count % $this->maxInsert)) {
+				if (! $this->db->query($sql . implode(",\n", $rows))) {
+					print 'Error filling \'tln_import\' table: ' . $this->db->error . "\n";
+					return false;
+				}
+				$inserted += $this->db->affected_rows;
+				// reset the counters
+				$count = 0;
+				$rows = array();
+			}
+		}
+		if (! $this->db->query($sql . implode(",\n", $rows))) {
+			print 'Error filling \'tln_import\' table: ' . $this->db->error . "\n";
+			return false;
+		}
+		$inserted += $this->db->affected_rows;
+		$endtime = time();
+		print $inserted . ' import rows inserted, ' . $skipped . ' skipped, ' . $dup . ' duplicates in ' . gmdate('H:i:s', $endtime - $starttime) . "\n";
+		return true;
+	}
+	function import(&$text) {
+		$job = Job::get_new();
+		// START TRANSACTION
+		if ($this->begin()) {
+			// Insert the uploaded text in the database
+			if ($this->fill_import($job->getId(), $text)) {
+				// Insert the sources
+				if ($this->fill_source()) {
+					// Insert the fact table rows
+					if ($this->fill_fact()) {
+						// Empty the imported text 
+						if ($this->empty_import($job->getId())) {
+							// COMMIT
+							if ($this->commit($job->getId())) {
+									
+								return true;		
+							}
+						}
+					}	
+				} 
+			}
+			// If any error occurred, roll back the transaction
+			// ROLLBACK
+			$this->rollback($job->getId());
+		} 
+	}
+	private function empty_import($concurrency) {
+		$starttime = time();
+		$inserted = 0;
+		$delete = 'delete from tln_import
+					where concurrency = ' . $concurrency;
+		if (! $this->db->query($delete)) {
+			print 'Error emptying \'tln_import\' table: ' . $this->db->error . "\n";
+			return false;
+		}
+		$inserted = $this->db->affected_rows;
+		$endtime = time();
+		print $inserted . ' tln_import rows deleted in ' . gmdate('H:i:s', $endtime - $starttime) . "\n";
+		return true;
+	}
+	function get() {
+		
+	}
+	function get_proportional() {
+		$starttime = time();
+		$sql = 'select s.source, d.year, d.month, count(f.count)
+    			from tln_date d left join (
+    			tln_source s inner join tln_fact f on s.tln_source_id = f.tln_source_id
+    			) on d.tln_date_id = f.tln_date_id
+    			where d.year > 1980 and d.year <= 2011
+    			group by s.source, d.year, d.month
+    			order by s.source, d.year, d.month';
+	}
+	private function begin() {
+		$insert = 'start transaction';
+		if (! $this->db->query($insert)) {
+			print 'Error starting a transaction: ' . $this->db->error . "\n";
+			return false;
+		}
+		return true;
+	}
+	private function rollback($concurrency) {
+		$inserted = 0;
+		$insert = 'rollback';
+		if (! $this->db->query($insert)) {
+			print 'Rollback error ' . $this->db->error . "\n";
+			return false;
+		}
+		$inserted = $this->db->affected_rows;
+		$endtime = time();
+		print 'Rollback! ' . $inserted . ' rows affected in ' . gmdate('H:i:s', $endtime - $concurrency) . "\n";
+		return true;
+	}
+	private function commit($concurrency) {
+		$inserted = 0;
+		$insert = 'commit';
+		if (! $this->db->query($insert)) {
+			print 'Commit error ' . $this->db->error . "\n";
+			return false;
+		}
+		$inserted = $this->db->affected_rows;
+		$endtime = time();
+		print 'Commit! ' . $inserted . ' rows affected in ' . gmdate('H:i:s', $endtime - $concurrency) . "\n";
+		return true;
+	}
+	private function validate_content($input) {
+		if (! preg_match('@^\d+/\d+/\d+,\d+:\d+:\d+,\w+,[M.][A.][C.][B.],[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+$@', $input, $match)) 
+			return false;
+		return true;
 	}
 }
 ?>
