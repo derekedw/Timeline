@@ -116,12 +116,15 @@ class TlnData {
 			tln_source_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			source VARCHAR(25) NOT NULL,
 			sourcetype VARCHAR(25) NOT NULL,
+			type VARCHAR(50) NOT NULL,
+			version VARCHAR(7) NOT NULL,
+			format VARCHAR(50) NOT NULL,
 			M CHAR(1) NOT NULL default \'.\',
 			A CHAR(1) NOT NULL default \'.\',
 			C CHAR(1) NOT NULL default \'.\',
 			B CHAR(1) NOT NULL default \'.\',
 			PRIMARY KEY (tln_source_id),
-			UNIQUE (source, sourcetype, M, A, C, B)
+			UNIQUE (source, sourcetype, type, version, format, M, A, C, B)
 		)';
 		if ($this->db->query($sql) == TRUE) {
 			$endtime = time();
@@ -144,11 +147,9 @@ class TlnData {
 			host VARCHAR(25) NOT NULL,
 			short VARCHAR(1000) NOT NULL,
 			description VARCHAR(1000) NOT NULL,
-			version VARCHAR(7) NOT NULL,
 			filename VARCHAR(1000) NOT NULL,
 			inode VARCHAR(25) NOT NULL,
 			notes VARCHAR(255) NOT NULL,
-			format VARCHAR(50) NOT NULL,
 			extra  VARCHAR(255) NOT NULL,
 			PRIMARY KEY (tln_fact_id),		
 			UNIQUE KEY tln_fact_uniq(tln_date_id, tln_time_id, tln_source_id, description(255), filename(255), inode),
@@ -239,20 +240,20 @@ class TlnData {
 	}
 	private function fill_source() {
 		$starttime = time();
-		$sql = 'insert ignore into tln_source (source, sourcetype, M, A, C, B)
-				select distinct source, sourcetype, mid(macb,1,1) as M, \'.\' as A, \'.\' as C, \'.\' as B
+		$sql = 'insert ignore into tln_source (source, sourcetype, type, version, format, M, A, C, B)
+				select distinct source, sourcetype, type, version, format, mid(macb,1,1) as M, \'.\' as A, \'.\' as C, \'.\' as B
     			from tln_import
     			where macb like \'M___\' 
     			union
-    			select distinct source, sourcetype, \'.\' as M, mid(macb,2,1) as A, \'.\' as C, \'.\' as B
+    			select distinct source, sourcetype, type, version, format, \'.\' as M, mid(macb,2,1) as A, \'.\' as C, \'.\' as B
     			from tln_import
     			where macb like \'_A__\' 
     			union
-    			select distinct source, sourcetype, \'.\' as M, \'.\' as A, mid(macb,3,1) as C, \'.\' as B
+    			select distinct source, sourcetype, type, version, format, \'.\' as M, \'.\' as A, mid(macb,3,1) as C, \'.\' as B
     			from tln_import
     			where macb like \'__C_\' 
     			union
-    			select distinct source, sourcetype, \'.\' as M, \'.\' as A, \'.\' as C, mid(macb,4,1) as B
+    			select distinct source, sourcetype, type, version, format, \'.\' as M, \'.\' as A, \'.\' as C, mid(macb,4,1) as B
     			from tln_import
     			where macb like \'___B\'';
 		if (! $this->db->query($sql)) {
@@ -265,25 +266,29 @@ class TlnData {
 	}
 	private function fill_fact() {
 		$starttime = time();
-		$sql = 'insert ignore into tln_fact(tln_date_id, tln_time_id, tln_source_id, count, user, host, short, description, version, filename, inode, notes, format, extra)
-    			select d.tln_date_id, t.tln_time_id, s.tln_source_id, count(*), i.user, i.host, i.short, i.description, i.version, i.filename, i.inode, i.notes, i.format, i.extra
+		$sql = 'insert ignore into tln_fact(tln_date_id, tln_time_id, tln_source_id, count, user, host, short, description, filename, inode, notes, extra)
+    			select d.tln_date_id, t.tln_time_id, s.tln_source_id, count(*), i.user, i.host, i.short, i.description, i.filename, i.inode, i.notes, i.extra
     			from tln_date d, tln_time t, tln_source s, tln_import i
-    			where d.date = i.date and t.tick = i.tick and s.source = i.source and s.sourcetype = i.sourcetype and s.M = \'M\' and i.macb like \'M___\'
+    			where d.date = i.date and t.tick = i.tick and s.source = i.source and s.sourcetype = i.sourcetype and s.M = \'M\' and i.macb like \'M___\' 
+    			and s.type = i.type and s.version = i.version and s.format = i.format
     			group by d.tln_date_id, t.tln_time_id, s.tln_source_id, i.macb, substring(i.description,255), substring(i.filename,255), i.inode
     			union
-    			select d.tln_date_id, t.tln_time_id, s.tln_source_id, count(*), i.user, i.host, i.short, i.description, i.version, i.filename, i.inode, i.notes, i.format, i.extra
+    			select d.tln_date_id, t.tln_time_id, s.tln_source_id, count(*), i.user, i.host, i.short, i.description, i.filename, i.inode, i.notes, i.extra
     			from tln_date d, tln_time t, tln_source s, tln_import i
     			where d.date = i.date and t.tick = i.tick and s.source = i.source and s.sourcetype = i.sourcetype and s.A = \'A\' and i.macb like \'_A__\'
+    			and s.type = i.type and s.version = i.version and s.format = i.format
     			group by d.tln_date_id, t.tln_time_id, s.tln_source_id, i.macb, substring(i.description,255), substring(i.filename,255), i.inode
     			union
-    			select d.tln_date_id, t.tln_time_id, s.tln_source_id, count(*), i.user, i.host, i.short, i.description, i.version, i.filename, i.inode, i.notes, i.format, i.extra
+    			select d.tln_date_id, t.tln_time_id, s.tln_source_id, count(*), i.user, i.host, i.short, i.description, i.filename, i.inode, i.notes, i.extra
     			from tln_date d, tln_time t, tln_source s, tln_import i
     			where d.date = i.date and t.tick = i.tick and s.source = i.source and s.sourcetype = i.sourcetype and s.C = \'C\' and i.macb like \'__C_\'
+    			and s.type = i.type and s.version = i.version and s.format = i.format
     			group by d.tln_date_id, t.tln_time_id, s.tln_source_id, i.macb, substring(i.description,255), substring(i.filename,255), i.inode
     			union
-    			select d.tln_date_id, t.tln_time_id, s.tln_source_id, count(*), i.user, i.host, i.short, i.description, i.version, i.filename, i.inode, i.notes, i.format, i.extra
+    			select d.tln_date_id, t.tln_time_id, s.tln_source_id, count(*), i.user, i.host, i.short, i.description, i.filename, i.inode, i.notes, i.extra
     			from tln_date d, tln_time t, tln_source s, tln_import i
     			where d.date = i.date and t.tick = i.tick and s.source = i.source and s.sourcetype = i.sourcetype and s.B = \'B\' and i.macb like \'___B\'
+    			and s.type = i.type and s.version = i.version and s.format = i.format
     			group by d.tln_date_id, t.tln_time_id, s.tln_source_id, i.macb, substring(i.description,255), substring(i.filename,255), i.inode';
 		if (! $this->db->query($sql)) {
 			print('Error filling table: ' . $this->db->error . "\n");
@@ -365,12 +370,12 @@ class TlnData {
 					// Insert the fact table rows
 					if ($this->fill_fact()) {
 						// Empty the imported text 
-						// if ($this->empty_import($job->getId())) {
+						// TODO UNCOMMENT if ($this->empty_import($job->getId())) {
 							// COMMIT
 							if ($this->commit($job->getId())) {
 								return true;		
 							 }
-						// }
+						// TODO UNCOMMENT }
 					}	
 				} 
 			}
@@ -398,7 +403,7 @@ class TlnData {
 		$sql = 'select d.tln_date_id, t.tln_time_id, sum(count) as count, 
 					d.date, t.tick, s.source, s.sourcetype, 
 					s.m, s.a, s.c, s.b,	f.user, f.host, f.short, f.description, 
-					f.version, f.filename, f.inode, f.notes, f.format, f.extra
+					f.filename, f.inode, f.notes, f.extra, s.type, s.version, s.format
     			from tln_date d inner join (
     				tln_time t inner join (
     					tln_source s inner join tln_fact f on s.tln_source_id = f.tln_source_id
@@ -414,8 +419,8 @@ class TlnData {
 			$this->set_row_count($stmt->num_rows);
 			$stmt->bind_result($tln_date_id, $tln_time_id, $count, 
 					$date, $tick, $source, $sourcetype, $m, $a, $c, $b, 
-					$user, $host, $short, $description, $version, $filename,
-					$inode, $notes, $format, $extra);
+					$user, $host, $short, $description, $filename,
+					$inode, $notes, $extra, $type, $version, $format);
 			$macb = array();
 			$keys = array();
 			while ($stmt->fetch()) {
@@ -425,18 +430,19 @@ class TlnData {
 					 $sourcetype == $oldkeys[2] &&
 					 $description == $oldkeys[3] &&
 					 $filename == $oldkeys[4] &&
-					 $inode == $oldkeys[5])) 
+					 $inode == $oldkeys[5] &&
+					 $type == $oldkeys[8])) 
 				{
 					$this->columns($macb, $m, $a, $c, $b, $count, $params);  
-					$oldkeys = array($tln_date_id, $tln_time_id, $sourcetype, $description, $filename, $inode, $date, $tick);
-					$oldrow = array($macb, array($count, gmdate("m/d/Y", strtotime($date)), $tick), array($source, $sourcetype,
+					$oldkeys = array($tln_date_id, $tln_time_id, $sourcetype, $description, $filename, $inode, $date, $tick, $type);
+					$oldrow = array($macb, array($count, gmdate("m/d/Y", strtotime($date)), $tick), array($source, $sourcetype, $type,
 						$user, $host, $short, $description, $version, $filename,
 						$inode, $notes, $format, $extra));
 				} else {
 					$result[] = $oldrow;
 					$this->columns($macb, $m, $a, $c, $b, $count, $params);
-					$oldkeys = array($tln_date_id, $tln_time_id, $sourcetype, $description, $filename, $inode, $date, $tick);
-					$oldrow = array($macb, array($count, gmdate("m/d/Y", strtotime($date)), $tick), array($source, $sourcetype,
+					$oldkeys = array($tln_date_id, $tln_time_id, $sourcetype, $description, $filename, $inode, $date, $tick, $type);
+					$oldrow = array($macb, array($count, gmdate("m/d/Y", strtotime($date)), $tick), array($source, $sourcetype, $type,
 						$user, $host, $short, $description, $version, $filename,
 						$inode, $notes, $format, $extra));
 				}
@@ -479,18 +485,18 @@ class TlnData {
 	}
 	function get_view() {
 		$starttime = time();
-		$sql = 'select d.year, d.month, s.sourcetype, s.M, s.A, s.C, s.B, sum(f.count) as items
+		$sql = 'select d.year, d.month, s.sourcetype, s.M, s.A, s.C, s.B, sum(f.count) as items, s.type, s.version, s.format
     			from tln_date d inner join (
     			tln_source s inner join tln_fact f on s.tln_source_id = f.tln_source_id
     			) on d.tln_date_id = f.tln_date_id
-    			group by d.year, d.month, s.sourcetype, s.M, s.A, s.C, s.B
-    			order by d.year desc, d.month desc, s.sourcetype, s.M, s.A, s.C, s.B';
+    			group by d.year, d.month, s.sourcetype, s.M, s.A, s.C, s.B, s.type, s.version, s.format
+    			order by d.year desc, d.month desc, s.sourcetype, s.M, s.A, s.C, s.B, s.type, s.version, s.format';
 		$result = array();
 		if ($stmt = $this->db->prepare($sql)) {
 			$stmt->execute();
 			$stmt->store_result();
 			$this->set_row_count($stmt->num_rows);
-			$stmt->bind_result($year, $month, $source, $m, $a, $c, $b, $items);
+			$stmt->bind_result($year, $month, $source, $m, $a, $c, $b, $items, $type, $version, $format);
 			$columns = array();
 			$sourcerows = array();
 			while ($stmt->fetch()) {
@@ -502,16 +508,22 @@ class TlnData {
 							$params['source'] = $source;
 							$this->columns($columns, $m, $a, $c, $b, $items, $params);
 							$oldsource = $source;
+							$oldtype = $type;
+							$oldversion = $version; 
+							$oldformat = $format;
 						} else {
-							$sourcerows[] = $this->sourcerows($columns, $oldsource, $params);
+							$sourcerows[] = $this->sourcerows($columns, $oldsource, $oldtype, $oldversion, $oldformat, $params);
 							$columns = array();
 							$params['source'] = $source;
 							$this->columns($columns, $m, $a, $c, $b, $items, $params);
 							$oldsource = $source;
+							$oldtype = $type;
+							$oldversion = $version; 
+							$oldformat = $format;
 						}
 						$oldmonth = $month;
 					} else {
-						$sourcerows[] = $this->sourcerows($columns, $oldsource, $params);
+						$sourcerows[] = $this->sourcerows($columns, $oldsource, $oldtype, $oldversion, $oldformat, $params);
 						unset($params['source']);
 						$result[] = $this->daterows($sourcerows, $year, $oldmonth, $params);
 						$columns = array();
@@ -520,11 +532,14 @@ class TlnData {
 						$params['month'] = $month;
 						$this->columns($columns, $m, $a, $c, $b, $items, $params);
 						$oldsource = $source;
+						$oldtype = $type;
+						$oldversion = $version; 
+						$oldformat = $format;
 						$oldmonth = $month;
 					}
 					$oldyear = $year;
 				} else {
-					$sourcerows[] = $this->sourcerows($columns, $oldsource, $params);
+					$sourcerows[] = $this->sourcerows($columns, $oldsource, $oldtype, $oldversion, $oldformat, $params);
 					unset($params['source']);
 					$result[]  = $this->daterows($sourcerows, $oldyear, $oldmonth, $params);
 					$columns = array();
@@ -534,11 +549,14 @@ class TlnData {
 					$params['year'] = $year;
 					$this->columns($columns, $m, $a, $c, $b, $items, $params);
 					$oldsource = $source;
+					$oldtype = $type;
+					$oldversion = $version; 
+					$oldformat = $format;
 					$oldmonth = $month;
 					$oldyear = $year;
 				}
 			}
-			$sourcerows[] = $this->sourcerows($columns, $oldsource, $params);
+			$sourcerows[] = $this->sourcerows($columns, $oldsource, $oldtype, $oldversion, $oldformat, $params);
 			unset($params['source']);
 			$result[]  = $this->daterows($sourcerows, $oldyear, $oldmonth, $params);
 			$stmt->free_result();
@@ -548,8 +566,8 @@ class TlnData {
 	private function daterows (&$rows, $year, $month, $params) {
 		return array($month . '/' . $year, $rows, $params);
 	}
-	private function sourcerows (&$columns, $source, $params) { 
-		return array($source, $columns, $params);
+	private function sourcerows (&$columns, $source, $oldtype, $oldversion, $oldformat, $params) { 
+		return array($source, $columns, $params, $oldtype, $oldversion, $oldformat);
 	}
 	private function columns(&$columns, $m, $a, $c, $b, $items, $params) {
 		$myparams = $params; 

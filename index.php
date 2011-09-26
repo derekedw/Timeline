@@ -7,6 +7,8 @@ function default_view($tln) {
 	    <tr>
 	      <th>Date Time</th>
 	      <th>Log Source</th>
+	      <th>Log Format</th>
+	      <th>Log Version</th>
 	      <th>M</th>
 	      <th>A</th>
 	      <th>C</th>
@@ -21,6 +23,8 @@ function default_view($tln) {
 		print '<a href="' . $tln->h2q($my_params) . '" >(details)</a></td>';
 		foreach ($daterow[1] as $sourcerow) {
 			print '<td><a href="' . $tln->h2q($sourcerow[2]) . '" >' . $sourcerow[0] . '</a></td>';
+			print '<td>' . $sourcerow[5] . '</td>';
+			print '<td>' . $sourcerow[4] . '</td>';
 			if (array_key_exists('M', $sourcerow[1])) {
 				print '<td><a href="' . $tln->h2q($sourcerow[1]['M'][1]) . '" >' . $sourcerow[1]['M'][0] . '</a></td>';
 			} else {
@@ -82,6 +86,7 @@ if ($input) {
 	      <th>MACB</th>
 	      <th>Source</th>
 	      <th>Sourcetype</th>
+	      <th>Type</th>
 	      <th>User</th>
 	      <th>Host</th>
 	      <th>Short</th>
