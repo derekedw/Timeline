@@ -644,7 +644,7 @@ class TlnData {
 		foreach ($my_params as $k => $v) {
 				$query[] = $k . '=' . $v;
 		}
-		return implode('&', $query);
+		return '?' . implode('&', $query);
 	}
 }
 ?>

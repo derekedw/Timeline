@@ -15,31 +15,34 @@ function default_view($tln) {
 	    </tr>
 	  	</thead>\n";
 	foreach ($result as $daterow) {
-		print '<tr><td rowspan="' . count($daterow[1]) . '" ><a href="' . $tln->h2q($daterow[2]) . '" >' . $daterow[0] . '</a></td>';
+		print '<tr><td rowspan="' . count($daterow[1]) . '" ><a href="' . $tln->h2q($daterow[2]) . '" >' . $daterow[0] . '</a> ';
+		$my_params = $daterow[2];
+		$my_params['view'] = 'detail';
+		print '<a href="' . $tln->h2q($my_params) . '" >(details)</a></td>';
 		foreach ($daterow[1] as $sourcerow) {
 			print '<td><a href="' . $tln->h2q($sourcerow[2]) . '" >' . $sourcerow[0] . '</a></td>';
 			if (array_key_exists('M', $sourcerow[1])) {
-				print '<td><a href="?' . $tln->h2q($sourcerow[1]['M'][1]) . '" >' . $sourcerow[1]['M'][0] . '</a></td>';
+				print '<td><a href="' . $tln->h2q($sourcerow[1]['M'][1]) . '" >' . $sourcerow[1]['M'][0] . '</a></td>';
 			} else {
 				print '<td>0</td>';
 			}
 			if (array_key_exists('A', $sourcerow[1])) {
-				print '<td><a href="?' . $tln->h2q($sourcerow[1]['A'][1]) . '" >' . $sourcerow[1]['A'][0] . '</a></td>';
+				print '<td><a href="' . $tln->h2q($sourcerow[1]['A'][1]) . '" >' . $sourcerow[1]['A'][0] . '</a></td>';
 			} else {
 				print '<td>0</td>';
 			}
 			if (array_key_exists('C', $sourcerow[1])) {
-				print '<td><a href="?' . $tln->h2q($sourcerow[1]['C'][1]) . '" >' . $sourcerow[1]['C'][0] . '</a></td>';
+				print '<td><a href="' . $tln->h2q($sourcerow[1]['C'][1]) . '" >' . $sourcerow[1]['C'][0] . '</a></td>';
 			} else {
 				print '<td>0</td>';
 			}
 			if (array_key_exists('B', $sourcerow[1])) {
-				print '<td><a href="?' . $tln->h2q($sourcerow[1]['B'][1]) . '" >' . $sourcerow[1]['B'][0] . '</a></td>';
+				print '<td><a href="' . $tln->h2q($sourcerow[1]['B'][1]) . '" >' . $sourcerow[1]['B'][0] . '</a></td>';
 			} else {
 				print '<td>0</td>';
 			}
 			if (array_key_exists('total', $sourcerow[1])) {
-				print '<td><a href="?' . $tln->h2q($sourcerow[1]['total'][1]) . '" >' . $sourcerow[1]['total'][0] . '</a></td>';
+				print '<td><a href="' . $tln->h2q($sourcerow[1]['total'][1]) . '" >' . $sourcerow[1]['total'][0] . '</a></td>';
 			} else {
 				print '<td>0</td>';
 			}
