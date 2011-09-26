@@ -7,9 +7,18 @@ class TlnData {
 	public function __construct(&$db) {
 		$this->db = $db;
 		$this->maxInsert = 2501;
+		$this->page = array('param_name' => 'page',
+							'size' => 50,
+							'current' => 0,
+							'paged' => true);
 		date_default_timezone_set("GMT");
 	}
-	
+	function get_row_count() {
+		return $this->row_count;		
+	}
+	function set_row_count($n) {
+		$this->row_count = $n;
+	}
 	function create_import() {
 		$starttime = time();
 		$sql = 'CREATE TABLE tln_import (
@@ -384,7 +393,7 @@ class TlnData {
 		print $inserted . ' tln_import rows deleted in ' . gmdate('H:i:s', $endtime - $starttime) . "\n";
 		return true;
 	}
-	function get_detail($params){
+	function get_detail_view($params){
 		$starttime = time();
 		$sql = 'select d.tln_date_id, t.tln_time_id, sum(count) as count, 
 					d.date, t.tick, s.source, s.sourcetype, 
@@ -397,11 +406,12 @@ class TlnData {
     			) on d.tln_date_id = f.tln_date_id
     			where ' . $this->get_where($params) . '
     			group by d.tln_date_id desc, t.tln_time_id desc, s.tln_source_id, f.description, f.filename, f.inode
-    			order by d.tln_date_id desc, t.tln_time_id desc, s.tln_source_id, f.description, f.filename, f.inode
-    			limit 50';
+    			order by d.tln_date_id desc, t.tln_time_id desc, s.tln_source_id, f.description, f.filename, f.inode';
 		$result = array();
 		if ($stmt = $this->db->prepare($sql)) {
 			$stmt->execute();
+			$stmt->store_result();
+			$this->set_row_count($stmt->num_rows);
 			$stmt->bind_result($tln_date_id, $tln_time_id, $count, 
 					$date, $tick, $source, $sourcetype, $m, $a, $c, $b, 
 					$user, $host, $short, $description, $version, $filename,
@@ -432,6 +442,7 @@ class TlnData {
 				}
 			}
 			$result[] = $oldrow;
+			$stmt->free_result();
 		}
 		return $result;
 	}
@@ -466,7 +477,7 @@ class TlnData {
 		}
 		return implode(' and ', $result);
 	}
-	function get() {
+	function get_view() {
 		$starttime = time();
 		$sql = 'select d.year, d.month, s.sourcetype, s.M, s.A, s.C, s.B, sum(f.count) as items
     			from tln_date d inner join (
@@ -477,6 +488,8 @@ class TlnData {
 		$result = array();
 		if ($stmt = $this->db->prepare($sql)) {
 			$stmt->execute();
+			$stmt->store_result();
+			$this->set_row_count($stmt->num_rows);
 			$stmt->bind_result($year, $month, $source, $m, $a, $c, $b, $items);
 			$columns = array();
 			$sourcerows = array();
@@ -528,8 +541,9 @@ class TlnData {
 			$sourcerows[] = $this->sourcerows($columns, $oldsource, $params);
 			unset($params['source']);
 			$result[]  = $this->daterows($sourcerows, $oldyear, $oldmonth, $params);
-			return $result;
+			$stmt->free_result();
 		}
+		return $result;
 	}
 	private function daterows (&$rows, $year, $month, $params) {
 		return array($month . '/' . $year, $rows, $params);
@@ -644,7 +658,7 @@ class TlnData {
 		foreach ($my_params as $k => $v) {
 				$query[] = $k . '=' . $v;
 		}
-		return '?' . implode('&', $query);
+		return '?' . implode('&', $query);		
 	}
 }
 ?>

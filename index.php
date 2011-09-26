@@ -1,7 +1,7 @@
 <?php
 
 function default_view($tln) {
-	$result = $tln->get();
+	$result = $tln->get_view();
 	print "<html><body><table><tbody> 
 		<thead>
 	    <tr>
@@ -73,7 +73,7 @@ if ($input) {
 } else {
 	if (array_key_exists('view', $_GET)) {
 		if ($_GET['view'] == 'detail') {
-			$result = $tln->get_detail($_GET);
+			$result = $tln->get_detail_view($_GET);
 			print "<html><body><table><thead>
 	    <tr>
 	      <th>Count</th>
