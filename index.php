@@ -1,24 +1,6 @@
 <?php
 
-require_once('tln-config.php');
-require_once('TlnData.php');
-
-$db = new mysqli(TLNDBHOST, TLNDBUSER, TLNDBPASS, TLNDBNAME);
-if (mysqli_connect_errno()) {
-	die('Database connection error: ' . mysqli_connect_error() . '  Please check \'tfx-config.php\'');
-}
-
-$tln = new TlnData($db);
-$input = file_get_contents('php://input');
-if ($input) {
-	$xmlDoc = new DOMDocument();
-	$xmlDoc->loadXML(@$input);
-	$nodes = $xmlDoc->getElementsByTagName("Data");
-	if ($nodes->length > 0) {
-		set_time_limit(120);
-		$tln->import($nodes->item(0)->textContent);
-	}
-} else {
+function default_view($tln) {
 	$result = $tln->get();
 	print "<html><body><table><tbody> 
 		<thead>
@@ -61,10 +43,67 @@ if ($input) {
 			} else {
 				print '<td>0</td>';
 			}
-			print '</tr>';
+			print "</tr>\n";
 		}
 	}
 	print "</tbody></table></body></html>\n";
+}
+
+require_once('tln-config.php');
+require_once('TlnData.php');
+
+$db = new mysqli(TLNDBHOST, TLNDBUSER, TLNDBPASS, TLNDBNAME);
+if (mysqli_connect_errno()) {
+	die('Database connection error: ' . mysqli_connect_error() . '  Please check \'tfx-config.php\'');
+}
+
+$tln = new TlnData($db);
+$input = file_get_contents('php://input');
+if ($input) {
+	$xmlDoc = new DOMDocument();
+	$xmlDoc->loadXML(@$input);
+	$nodes = $xmlDoc->getElementsByTagName("Data");
+	if ($nodes->length > 0) {
+		set_time_limit(120);
+		$tln->import($nodes->item(0)->textContent);
+	}
+} else {
+	if (array_key_exists('view', $_GET)) {
+		if ($_GET['view'] == 'detail') {
+			$result = $tln->get_detail($_GET);
+			print "<html><body><table><thead>
+	    <tr>
+	      <th>Count</th>
+	      <th>Date</th>
+	      <th>Time</th>
+	      <th>MACB</th>
+	      <th>Source</th>
+	      <th>Sourcetype</th>
+	      <th>User</th>
+	      <th>Host</th>
+	      <th>Short</th>
+	      <th>Description</th>
+	      <th>Version</th>
+	      <th>Filename</th>
+	      <th>Inode</th>
+	      <th>Notes</th>
+	      <th>Format</th>
+	      <th>Extra</th>
+	    </tr>
+	  	</thead><tbody>\n";
+			foreach ($result as $row) {
+				/* $macb, $count, gmdate("%m/%d/%Y", strtotime($oldkeys[6])), $oldkeys[7], $source, $sourcetype,
+						$user, $host, $short, $description, $version, $filename,
+						$inode, $notes, $format, $extra */
+				$macb = $row[0];
+				print '<tr><td>' . implode('</td><td>', $row[1]) . "</td>\n";
+				print '<td>' . $tln->get_macb($macb) . '</td>';
+				print '<td>' . implode('</td><td>', $row[2]) . "</td></tr>\n";				
+			}
+			print "</tbody></table></body></html>\n";
+		}
+	} else 
+	default_view($tln);
 }
 
 $db->close();

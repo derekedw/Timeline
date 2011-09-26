@@ -384,6 +384,88 @@ class TlnData {
 		print $inserted . ' tln_import rows deleted in ' . gmdate('H:i:s', $endtime - $starttime) . "\n";
 		return true;
 	}
+	function get_detail($params){
+		$starttime = time();
+		$sql = 'select d.tln_date_id, t.tln_time_id, sum(count) as count, 
+					d.date, t.tick, s.source, s.sourcetype, 
+					s.m, s.a, s.c, s.b,	f.user, f.host, f.short, f.description, 
+					f.version, f.filename, f.inode, f.notes, f.format, f.extra
+    			from tln_date d inner join (
+    				tln_time t inner join (
+    					tln_source s inner join tln_fact f on s.tln_source_id = f.tln_source_id
+    				) on t.tln_time_id = f.tln_time_id
+    			) on d.tln_date_id = f.tln_date_id
+    			where ' . $this->get_where($params) . '
+    			group by d.tln_date_id desc, t.tln_time_id desc, s.tln_source_id, f.description, f.filename, f.inode
+    			order by d.tln_date_id desc, t.tln_time_id desc, s.tln_source_id, f.description, f.filename, f.inode
+    			limit 50';
+		$result = array();
+		if ($stmt = $this->db->prepare($sql)) {
+			$stmt->execute();
+			$stmt->bind_result($tln_date_id, $tln_time_id, $count, 
+					$date, $tick, $source, $sourcetype, $m, $a, $c, $b, 
+					$user, $host, $short, $description, $version, $filename,
+					$inode, $notes, $format, $extra);
+			$macb = array();
+			$keys = array();
+			while ($stmt->fetch()) {
+				if (( ! isset($oldkeys)) || 
+					($tln_date_id == $oldkeys[0] && 
+					 $tln_time_id == $oldkeys[1] && 
+					 $sourcetype == $oldkeys[2] &&
+					 $description == $oldkeys[3] &&
+					 $filename == $oldkeys[4] &&
+					 $inode == $oldkeys[5])) 
+				{
+					$this->columns($macb, $m, $a, $c, $b, $count, $params);  
+					$oldkeys = array($tln_date_id, $tln_time_id, $sourcetype, $description, $filename, $inode, $date, $tick);
+					$oldrow = array($macb, array($count, gmdate("m/d/Y", strtotime($date)), $tick), array($source, $sourcetype,
+						$user, $host, $short, $description, $version, $filename,
+						$inode, $notes, $format, $extra));
+				} else {
+					$result[] = $oldrow;
+					$this->columns($macb, $m, $a, $c, $b, $count, $params);
+					$oldkeys = array($tln_date_id, $tln_time_id, $sourcetype, $description, $filename, $inode, $date, $tick);
+					$oldrow = array($macb, array($count, gmdate("m/d/Y", strtotime($date)), $tick), array($source, $sourcetype,
+						$user, $host, $short, $description, $version, $filename,
+						$inode, $notes, $format, $extra));
+				}
+			}
+			$result[] = $oldrow;
+		}
+		return $result;
+	}
+	function get_where($params) {
+		$result = array();
+		if (array_key_exists('year', $params)) {
+			$result[] = 'd.year=' . $params['year'];
+		}
+		if (array_key_exists('month', $params)) {
+			$result[] = 'd.month=' . $params['month'];
+		}
+		if (array_key_exists('source', $params)) {
+			$result[] = 's.sourcetype=\'' . $params['source'] . '\'';
+		}
+		if (array_key_exists('macb', $params)) {
+			switch ($params['macb']) {
+				case 'M':
+					$result[] = 's.m=\'M\'';
+					break;
+				case 'A':
+					$result[] = 's.a=\'A\'';
+					break;
+				case 'C':
+					$result[] = 's.c=\'C\'';
+					break;
+				case 'B':
+					$result[] = 's.b=\'B\'';
+					break;
+				default:
+					;				
+			}
+		}
+		return implode(' and ', $result);
+	}
 	function get() {
 		$starttime = time();
 		$sql = 'select d.year, d.month, s.sourcetype, s.M, s.A, s.C, s.B, sum(f.count) as items
@@ -457,6 +539,7 @@ class TlnData {
 	}
 	private function columns(&$columns, $m, $a, $c, $b, $items, $params) {
 		$myparams = $params; 
+		$myparams['view'] = 'detail';
 		if ($m == 'M') {
 			$myparams['macb'] = 'M';
 			$columns['M'] = array($items, $myparams);
@@ -477,6 +560,26 @@ class TlnData {
 		$columns['total'] = array($columns['total'][0] + $items, $myparams);
 		return $columns;
 	}
+	function get_macb($macb) {
+		$result = '';
+		if (array_key_exists('M', $macb))
+			$result .= 'M';
+		else 
+			$result .= '.';
+		if (array_key_exists('A', $macb))
+			$result .= 'A';
+		else 
+			$result .= '.';
+		if (array_key_exists('C', $macb)) 
+			$result .= 'C';
+		else 
+			$result .= '.';
+		if (array_key_exists('B', $macb)) 
+			$result .= 'B';
+		else 
+			$result .= '.';
+		return $result;
+	} 
 	function get_proportional() {
 		$job = Job::get_new();
 		$starttime = time();
