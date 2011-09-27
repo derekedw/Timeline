@@ -6,9 +6,10 @@ function default_view($tln) {
 		<thead>
 	    <tr>
 	      <th>Date Time</th>
+	      <th>Host</th>
 	      <th>Log Source</th>
-	      <th>Log Format</th>
-	      <th>Log Version</th>
+	      <th>L2T Format</th>
+	      <th>L2T Version</th>
 	      <th>M</th>
 	      <th>A</th>
 	      <th>C</th>
@@ -22,6 +23,7 @@ function default_view($tln) {
 		$my_params['view'] = 'detail';
 		print '<a href="' . $tln->h2q($my_params) . '" >(details)</a></td>';
 		foreach ($daterow[1] as $sourcerow) {
+			print '<td>' . $sourcerow[6] . '</td>';
 			print '<td><a href="' . $tln->h2q($sourcerow[2]) . '" >' . $sourcerow[0] . '</a></td>';
 			print '<td>' . $sourcerow[5] . '</td>';
 			print '<td>' . $sourcerow[4] . '</td>';
