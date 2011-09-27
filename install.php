@@ -11,24 +11,33 @@ if (mysqli_connect_errno()) {
 	die('Connect error: ' . mysqli_connect_error());
 }
 
-$tln = new TlnData($db);
-$tln->create_date();
-$tln->create_time();
-$tln->create_version();
-
-$tln->create_import();
-$tln->create_source();
-$tln->create_fact();
-
-$tln->fill_date($db);
-$tln->fill_time($db);
-$tln->fill_version($db);
-
-Job::create($db);
-
+if (Job::create($db)) {
+	$job = Job::get_new();
+	$tln = new TlnData($db);
+	if ($tln->create_date()) {
+		if ($tln->fill_date($db)) {
+			if ($tln->create_time()) {
+				if ($tln->fill_time($db)) {
+					if ($tln->create_version()) {
+						if ($tln->create_import()) {
+							if ($tln->create_source()) {
+								if ($tln->create_fact()) {
+									if ($tln->fill_version($db)) { 
+										print $tln->h1('All done in ' . gmdate("H:i:s", time() - $job->getId()));
+										$db->close();
+										exit(0);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}				
+print $tln->h1('Install unsuccessful');
 $db->close();
-print 'All done!<br />';
-
 ?>
 </body>
 </html>

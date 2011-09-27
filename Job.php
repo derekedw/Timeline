@@ -19,9 +19,11 @@ class Job {
 		)';
 		if ($db->query($sql) == TRUE) {
 			$endtime = time();
-			print 'Created \'job\' table in ' . gmdate('H:i:s', $endtime - $starttime) . "<br />";
+			print '<h1>Created \'job\' table in ' . gmdate('H:i:s', $endtime - $starttime) . "</h1>";
+			return true;
 		} else {
-			die('Error creating \'job\' table: ' . $db->error . "<br />");
+			print('<h1>Error creating \'job\' table: ' . $db->error . "</h1>");
+			return false;
 		}
 	}
 	

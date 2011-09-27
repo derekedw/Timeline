@@ -11,6 +11,11 @@ class TlnData {
 							'size' => 50,
 							'current' => 0,
 							'paged' => true);
+		$this->datezoom = array(array('month'),
+								array('day'),
+								array('hour'),
+								array('minute'),
+								array('second'));
 		date_default_timezone_set("GMT");
 	}
 	function get_row_count() {
@@ -45,12 +50,12 @@ class TlnData {
 		)';
 		if ($this->db->query($sql) == TRUE) {
 			$endtime = time();
-			print 'Created \'tln_import\' table in ' . gmdate('H:i:s', $endtime - $starttime) . "<br />";
+			print $this->h1('Created \'tln_import\' table in ' . gmdate('H:i:s', $endtime - $starttime));
+			return true;
 		} else {
-			print ('Error creating \'tln_import\' table: ' . $this->db->error . "<br />");
+			print $this->h1('Error creating \'tln_import\' table: ' . $this->db->error);
 			return false;
 		}
-		return true;
 	}
 	
 	function create_date() {
@@ -66,11 +71,15 @@ class TlnData {
 				)';
 		if ($this->db->query($sql) == TRUE) {
 			$endtime = time();
-			print 'Created \'tln_date\' table in ' . gmdate('H:i:s', $endtime - $starttime) . "<br />";
+			print $this->h1('Created \'tln_date\' table in ' . gmdate('H:i:s', $endtime - $starttime));
+			return true;
 		} else {
-			print ('Error creating \'tln_date\' table: ' . $this->db->error . "<br />");
+			print $this->h1('Error creating \'tln_date\' table: ' . $this->db->error . "<br />");
 			return false;
 		}
+	}
+	function h1($text) {
+		return '<h1>' . $text . '</h1>';
 	}
 	function create_time() {
 		$starttime = time();
@@ -78,17 +87,16 @@ class TlnData {
 					tln_time_id BIGINT UNSIGNED DEFAULT 0 NOT NULL,
 					tick TIME DEFAULT \'00:00:00\' NOT NULL,
 					hour TIME DEFAULT \'00:00:00\' NOT NULL,
-					tick360 TIME DEFAULT \'00:00:00\' NOT NULL,
 					minute TIME DEFAULT \'00:00:00\' NOT NULL,
-					tick6 TIME DEFAULT \'00:00:00\' NOT NULL,
 					PRIMARY KEY (tln_time_id),
 					INDEX(tick)
 				)';
 		if ($this->db->query($sql) == TRUE) {
 			$endtime = time();
-			print 'Created \'tln_time\' table in ' . gmdate('H:i:s', $endtime - $starttime) . "<br />";
+			print $this->h1('Created \'tln_time\' table in ' . gmdate('H:i:s', $endtime - $starttime));
+			return true;
 		} else {
-			print ('Error creating \'tln_time\' table: ' . $this->db->error . "<br />");
+			print $this->h1('Error creating \'tln_time\' table: ' . $this->db->error);
 			return false;
 		}
 		return true;
@@ -102,12 +110,12 @@ class TlnData {
 		)';
 		if ($this->db->query($sql) == TRUE) {
 			$endtime = time();
-			print 'Created \'tln_version\' table in ' . gmdate('H:i:s', $endtime - $starttime) . "<br />";
+			print $this->h1('Created \'tln_version\' table in ' . gmdate('H:i:s', $endtime - $starttime));
+			return true;
 		} else {
-			print ('Error creating \'tln_version\' table: ' . $this->db->error . "<br />");
+			print $this->h1('Error creating \'tln_version\' table: ' . $this->db->error);
 			return false;
 		}
-		return true;
 	}
 	
 	function create_source() {
@@ -129,12 +137,12 @@ class TlnData {
 		)';
 		if ($this->db->query($sql) == TRUE) {
 			$endtime = time();
-			print 'Created \'tln_source\' table in ' . gmdate('H:i:s', $endtime - $starttime) . "<br />";
+			print $this->h1('Created \'tln_source\' table in ' . gmdate('H:i:s', $endtime - $starttime));
+			return true;
 		} else {
-			print ('Error creating \'tln_source\' table: ' . $this->db->error . "<br />");
+			print $this->h1('Error creating \'tln_source\' table: ' . $this->db->error . "<br />");
 			return false;
 		}
-		return true;
 	}
 	function create_fact() {
 		$starttime = time();
@@ -159,12 +167,12 @@ class TlnData {
 		)';
 		if ($this->db->query($sql) == TRUE) {
 			$endtime = time();
-			print 'Created \'tln_fact\' table in ' . gmdate('H:i:s', $endtime - $starttime) . "<br />";
+			print $this->h1('Created \'tln_fact\' table in ' . gmdate('H:i:s', $endtime - $starttime));
+			return true;
 		} else {
-			print ('Error creating \'tln_fact\' table: ' . $this->db->error . "<br />");
+			print $this->h1('Error creating \'tln_fact\' table: ' . $this->db->error . "<br />");
 			return false;
 		}
-		return true;
 	}
 	
 	function fill_date() {
@@ -182,7 +190,7 @@ class TlnData {
 				'DAY(\'' . gmdate('Y-m-d', $timestamp) . '\')')) . ')');
 			if (0 == ($i % 3600)) {
 				if (! $this->db->query($sql . implode(",\n", $rows))) {
-					print ('Error filling table: ' . $this->db->error . "<br />");
+					print $this->p('Error filling table: ' . $this->db->error);
 					return false;
 				}
 				$count += $this->db->affected_rows;
@@ -190,27 +198,29 @@ class TlnData {
 			}
 		}
 		if (! $this->db->query($sql . implode(",\n", $rows))) {
-			print ('Error filling table: ' . $this->db->error . "<br />");
+			print $this->p('Error filling table: ' . $this->db->error);
 			return false;
 		}
 		$endtime = time();
 		$count += $this->db->affected_rows;
-		print $count . ' rows added to \'tln_date\' in ' . gmdate('H:i:s', $endtime - $starttime) . "<br />";
+		print $this->p($count . ' rows added to \'tln_date\' in ' . gmdate('H:i:s', $endtime - $starttime));
 		return true;
 	}
-	
+	function p($text) {
+		return '<p>' . $text . '</p>';
+	}
 	function fill_time() {
 		$count = 0;
 		$rows = array();
 		$starttime = time();
-		$sql = "insert into tln_time (tln_time_id, tick, hour, tick360, minute, tick6) values\n";
+		$sql = "insert into tln_time (tln_time_id, tick, hour, minute) values\n";
 		for ($i = 0; $i < (24 * 60 * 60); $i++) {
 			$rows[] = ('(' . $i . ', \'' . implode('\', \'', array(gmdate('H:i:s', $i),
-			gmdate('H:i:s', intval($i/3600)*3600), gmdate('H:i:s', intval($i/360)*360),
-			gmdate('H:i:s', intval($i/60)*60), gmdate('H:i:s', intval($i/6)*6))) . '\')');
+			gmdate('H:i:s', intval($i/3600)*3600), 
+			gmdate('H:i:s', intval($i/60)*60))) . '\')');
 			if (0 == ($i % 3600)) {
 				if (! $this->db->query($sql . implode(",\n", $rows))) {
-					print('Error filling table: ' . $this->db->error . "<br />");
+					print $this->p('Error filling table: ' . $this->db->error);
 					return false;
 				}
 				$count += $this->db->affected_rows;
@@ -218,12 +228,12 @@ class TlnData {
 			}
 		}
 		if (! $this->db->query($sql . implode(",\n", $rows))) {
-			print ('Error filling table: ' . $this->db->error . "<br />");
+			print $this->p('Error filling table: ' . $this->db->error);
 			return false;
 		}
 		$endtime = time();
 		$count += $this->db->affected_rows;
-		print $count . ' rows added to \'tln_time\' in ' . gmdate('H:i:s', $endtime - $starttime) . "<br />";
+		print $this->p($count . ' rows added to \'tln_time\' in ' . gmdate('H:i:s', $endtime - $starttime));
 		return true;
 	}
 	
@@ -231,11 +241,11 @@ class TlnData {
 		$starttime = time();
 		$sql = 'insert into tln_version (version) values(1)';
 		if (! $this->db->query($sql)) {
-			print ('Error filling table: ' . $this->db->error . "<br />");
+			print $this->p('Error filling table: ' . $this->db->error . "<br />");
 			return false;
 		}
 		$endtime = time();
-		print $this->db->affected_rows . ' rows added to \'tln_version\' in ' . gmdate('H:i:s', $endtime - $starttime) . "<br />";
+		print $this->p($this->db->affected_rows . ' rows added to \'tln_version\' in ' . gmdate('H:i:s', $endtime - $starttime));
 		return true;
 	}
 	private function fill_source() {
