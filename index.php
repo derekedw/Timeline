@@ -1,7 +1,8 @@
 <?php
 
-function default_view($tln) {
-	$result = $tln->get_view();
+function default_view($tln, $params) {
+	if (count($result = $tln->get_view($params)) <= 0)
+		return false;
 	print "<html><body><table><tbody> 
 		<thead>
 	    <tr>
@@ -113,7 +114,7 @@ if ($input) {
 			print "</tbody></table></body></html>\n";
 		}
 	} else 
-	default_view($tln);
+	default_view($tln, $_GET);
 }
 
 $db->close();

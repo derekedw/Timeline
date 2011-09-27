@@ -11,11 +11,12 @@ class TlnData {
 							'size' => 50,
 							'current' => 0,
 							'paged' => true);
-		$this->datezoom = array(array('month'),
-								array('day'),
-								array('hour'),
-								array('minute'),
-								array('second'));
+		$this->datezoom = array(array('name' => 'month',  'datefield' => 'd.month', 'timefield' => '\'.\''),
+								array('name' => 'day',    'datefield' => 'd.day', 'timefield' => '\'.\''),
+								array('name' => 'hour',   'datefield' => 'd.day', 'timefield' => 't.hour'),
+								array('name' => 'minute', 'datefield' => 'd.day', 'timefield' => 't.minute'),
+								array('name' => 'second', 'datefield' => 'd.day', 'timefield' => 't.second'));
+		$this->datezoom_level = 0;
 		date_default_timezone_set("GMT");
 	}
 	function get_row_count() {
@@ -63,9 +64,9 @@ class TlnData {
 		$sql = 'CREATE TABLE tln_date (
 					tln_date_id BIGINT UNSIGNED DEFAULT 0 NOT NULL,
 					date DATE DEFAULT \'0000-00-00\' NOT NULL,
-					year YEAR DEFAULT 0000 NOT NULL,
-					month TINYINT UNSIGNED DEFAULT 0 NOT NULL,
-					day TINYINT UNSIGNED DEFAULT 0 NOT NULL,
+					year VARCHAR(4) NOT NULL,
+					month VARCHAR(7) NOT NULL,
+					day VARCHAR(10) NOT NULL,
 					PRIMARY KEY (tln_date_id),
 					INDEX(date)
 				)';
@@ -86,8 +87,9 @@ class TlnData {
 		$sql = 'CREATE TABLE tln_time (
 					tln_time_id BIGINT UNSIGNED DEFAULT 0 NOT NULL,
 					tick TIME DEFAULT \'00:00:00\' NOT NULL,
-					hour TIME DEFAULT \'00:00:00\' NOT NULL,
-					minute TIME DEFAULT \'00:00:00\' NOT NULL,
+					hour VARCHAR(2) NOT NULL,
+					minute VARCHAR(5) NOT NULL,
+					second VARCHAR(8) NOT NULL,
 					PRIMARY KEY (tln_time_id),
 					INDEX(tick)
 				)';
@@ -185,9 +187,9 @@ class TlnData {
 			$timestamp = $i * $aday;
 			$rows[] = ('(' . implode(', ', array($i,
 				'\'' . gmdate('Y-m-d', $timestamp) . '\'',
-				'YEAR(\'' . gmdate('Y-m-d', $timestamp) . '\')',
-				'MONTH(\'' . gmdate('Y-m-d', $timestamp) . '\')',
-				'DAY(\'' . gmdate('Y-m-d', $timestamp) . '\')')) . ')');
+				'\'' . gmdate('Y', $timestamp). '\'',
+				'\'' . gmdate('Y-m', $timestamp) . '\'',
+				'\'' . gmdate('Y-m-d', $timestamp) . '\'')) . ')');
 			if (0 == ($i % 3600)) {
 				if (! $this->db->query($sql . implode(",\n", $rows))) {
 					print $this->p('Error filling table: ' . $this->db->error);
@@ -213,11 +215,13 @@ class TlnData {
 		$count = 0;
 		$rows = array();
 		$starttime = time();
-		$sql = "insert into tln_time (tln_time_id, tick, hour, minute) values\n";
+		$sql = "insert into tln_time (tln_time_id, tick, hour, minute, second) values\n";
 		for ($i = 0; $i < (24 * 60 * 60); $i++) {
-			$rows[] = ('(' . $i . ', \'' . implode('\', \'', array(gmdate('H:i:s', $i),
-			gmdate('H:i:s', intval($i/3600)*3600), 
-			gmdate('H:i:s', intval($i/60)*60))) . '\')');
+			$rows[] = ('(' . $i . ', \'' . implode('\', \'', array(
+			gmdate('H:i:s', $i),
+			gmdate('H', $i),
+			gmdate('H:i', $i), 
+			gmdate('H:i:s', $i))) . '\')');
 			if (0 == ($i % 3600)) {
 				if (! $this->db->query($sql . implode(",\n", $rows))) {
 					print $this->p('Error filling table: ' . $this->db->error);
@@ -419,7 +423,7 @@ class TlnData {
     					tln_source s inner join tln_fact f on s.tln_source_id = f.tln_source_id
     				) on t.tln_time_id = f.tln_time_id
     			) on d.tln_date_id = f.tln_date_id
-    			where ' . $this->get_where($params) . '
+    			' . $this->get_where($params) . '
     			group by d.tln_date_id desc, t.tln_time_id desc, s.tln_source_id, f.description, f.filename, f.inode
     			order by d.tln_date_id desc, t.tln_time_id desc, s.tln_source_id, f.description, f.filename, f.inode';
 		$result = array();
@@ -462,7 +466,7 @@ class TlnData {
 		}
 		return $result;
 	}
-	function get_where($params) {
+	private function get_where($params) {
 		$result = array();
 		if (array_key_exists('year', $params)) {
 			$result[] = 'd.year=' . $params['year'];
@@ -491,16 +495,23 @@ class TlnData {
 					;				
 			}
 		}
-		return implode(' and ', $result);
+		if (count($result) > 0)
+			return 'where ' . implode(' and ', $result);
+		else
+			return ''; 
 	}
-	function get_view() {
+	function get_view($params) {
 		$starttime = time();
-		$sql = 'select d.year, d.month, s.sourcetype, s.M, s.A, s.C, s.B, sum(f.count) as items, s.version, s.format, s.host
+		if (array_key_exists('datezoom', $params)) 
+			$this->datezoom_level = $params['datezoom'];
+		$datefield = $this->datezoom[$this->datezoom_level]['datefield'];
+		$timefield = $this->datezoom[$this->datezoom_level]['timefield'];;
+		$sql = 'select ' . $datefield . ', ' . $timefield . ', s.sourcetype, s.M, s.A, s.C, s.B, sum(f.count) as items, s.version, s.format, s.host
     			from tln_date d inner join (
     			tln_source s inner join tln_fact f on s.tln_source_id = f.tln_source_id
     			) on d.tln_date_id = f.tln_date_id
-    			group by d.year, d.month, s.sourcetype, s.M, s.A, s.C, s.B, s.version, s.format, s.host
-    			order by d.year desc, d.month desc, s.sourcetype, s.M, s.A, s.C, s.B, s.version, s.format, s.host';
+    			group by ' . $datefield . ', ' . $timefield . ', s.sourcetype, s.M, s.A, s.C, s.B, s.version, s.format, s.host
+    			order by ' . $datefield . ' desc, ' . $timefield . ' desc, s.sourcetype, s.M, s.A, s.C, s.B, s.version, s.format, s.host';
 		$result = array();
 		if ($stmt = $this->db->prepare($sql)) {
 			$stmt->execute();
@@ -509,6 +520,7 @@ class TlnData {
 			$stmt->bind_result($year, $month, $source, $m, $a, $c, $b, $items, $version, $format, $host);
 			$columns = array();
 			$sourcerows = array();
+			$params['datezoom'] = $this->datezoom_level;
 			while ($stmt->fetch()) {
 				if (( ! isset($oldyear)) || $year == $oldyear) {
 					$params['year'] = $year;
@@ -573,7 +585,9 @@ class TlnData {
 		return $result;
 	}
 	private function daterows (&$rows, $year, $month, $params) {
-		return array($month . '/' . $year, $rows, $params);
+		$myparams = $params;
+		$myparams['datezoom'] = $myparams['datezoom'] + 1; 			
+		return array($year . ' ' . $month, $rows, $myparams);
 	}
 	private function sourcerows (&$columns, $source, $oldversion, $oldformat, $oldhost, $params) { 
 		return array($source, $columns, $params, $oldversion, $oldformat, $oldhost);
