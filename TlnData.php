@@ -67,8 +67,8 @@ class TlnData {
 					year VARCHAR(4) NOT NULL,
 					month VARCHAR(7) NOT NULL,
 					day VARCHAR(10) NOT NULL,
-					PRIMARY KEY (tln_date_id),
-					INDEX(date)
+					UNIQUE KEY tln_date_uniq(date, year, month, day),
+					PRIMARY KEY (tln_date_id)
 				)';
 		if ($this->db->query($sql) == TRUE) {
 			$endtime = time();
@@ -90,8 +90,8 @@ class TlnData {
 					hour VARCHAR(2) NOT NULL,
 					minute VARCHAR(5) NOT NULL,
 					second VARCHAR(8) NOT NULL,
-					PRIMARY KEY (tln_time_id),
-					INDEX(tick)
+					UNIQUE KEY tln_time_uniq(tick, hour, minute, second),
+					PRIMARY KEY (tln_time_id)
 				)';
 		if ($this->db->query($sql) == TRUE) {
 			$endtime = time();
@@ -135,7 +135,7 @@ class TlnData {
 			C CHAR(1) NOT NULL default \'.\',
 			B CHAR(1) NOT NULL default \'.\',
 			PRIMARY KEY (tln_source_id),
-			UNIQUE (source, sourcetype, type, version, host, format, M, A, C, B)
+			UNIQUE (source, sourcetype, type, host, version, format, M, A, C, B)
 		)';
 		if ($this->db->query($sql) == TRUE) {
 			$endtime = time();
