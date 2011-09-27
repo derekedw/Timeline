@@ -485,18 +485,18 @@ class TlnData {
 	}
 	function get_view() {
 		$starttime = time();
-		$sql = 'select d.year, d.month, s.sourcetype, s.M, s.A, s.C, s.B, sum(f.count) as items, s.type, s.version, s.format, s.host
+		$sql = 'select d.year, d.month, s.sourcetype, s.M, s.A, s.C, s.B, sum(f.count) as items, s.version, s.format, s.host
     			from tln_date d inner join (
     			tln_source s inner join tln_fact f on s.tln_source_id = f.tln_source_id
     			) on d.tln_date_id = f.tln_date_id
-    			group by d.year, d.month, s.sourcetype, s.M, s.A, s.C, s.B, s.type, s.version, s.format, s.host
-    			order by d.year desc, d.month desc, s.sourcetype, s.M, s.A, s.C, s.B, s.type, s.version, s.format, s.host';
+    			group by d.year, d.month, s.sourcetype, s.M, s.A, s.C, s.B, s.version, s.format, s.host
+    			order by d.year desc, d.month desc, s.sourcetype, s.M, s.A, s.C, s.B, s.version, s.format, s.host';
 		$result = array();
 		if ($stmt = $this->db->prepare($sql)) {
 			$stmt->execute();
 			$stmt->store_result();
 			$this->set_row_count($stmt->num_rows);
-			$stmt->bind_result($year, $month, $source, $m, $a, $c, $b, $items, $type, $version, $format, $host);
+			$stmt->bind_result($year, $month, $source, $m, $a, $c, $b, $items, $version, $format, $host);
 			$columns = array();
 			$sourcerows = array();
 			while ($stmt->fetch()) {
@@ -508,24 +508,22 @@ class TlnData {
 							$params['source'] = $source;
 							$this->columns($columns, $m, $a, $c, $b, $items, $params);
 							$oldsource = $source;
-							$oldtype = $type;
 							$oldversion = $version; 
 							$oldformat = $format;
 							$oldhost = $host;
 						} else {
-							$sourcerows[] = $this->sourcerows($columns, $oldsource, $oldtype, $oldversion, $oldformat, $oldhost, $params);
+							$sourcerows[] = $this->sourcerows($columns, $oldsource, $oldversion, $oldformat, $oldhost, $params);
 							$columns = array();
 							$params['source'] = $source;
 							$this->columns($columns, $m, $a, $c, $b, $items, $params);
 							$oldsource = $source;
-							$oldtype = $type;
 							$oldversion = $version; 
 							$oldformat = $format;
 							$oldhost = $host;
 						}
 						$oldmonth = $month;
 					} else {
-						$sourcerows[] = $this->sourcerows($columns, $oldsource, $oldtype, $oldversion, $oldformat, $oldhost, $params);
+						$sourcerows[] = $this->sourcerows($columns, $oldsource, $oldversion, $oldformat, $oldhost, $params);
 						unset($params['source']);
 						$result[] = $this->daterows($sourcerows, $year, $oldmonth, $params);
 						$columns = array();
@@ -534,7 +532,6 @@ class TlnData {
 						$params['month'] = $month;
 						$this->columns($columns, $m, $a, $c, $b, $items, $params);
 						$oldsource = $source;
-						$oldtype = $type;
 						$oldversion = $version; 
 						$oldformat = $format;
 						$oldhost = $host;
@@ -542,7 +539,7 @@ class TlnData {
 					}
 					$oldyear = $year;
 				} else {
-					$sourcerows[] = $this->sourcerows($columns, $oldsource, $oldtype, $oldversion, $oldformat, $oldhost, $params);
+					$sourcerows[] = $this->sourcerows($columns, $oldsource, $oldversion, $oldformat, $oldhost, $params);
 					unset($params['source']);
 					$result[]  = $this->daterows($sourcerows, $oldyear, $oldmonth, $params);
 					$columns = array();
@@ -552,14 +549,13 @@ class TlnData {
 					$params['year'] = $year;
 					$this->columns($columns, $m, $a, $c, $b, $items, $params);
 					$oldsource = $source;
-					$oldtype = $type;
 					$oldversion = $version; 
 					$oldformat = $format;
 					$oldmonth = $month;
 					$oldyear = $year;
 				}
 			}
-			$sourcerows[] = $this->sourcerows($columns, $oldsource, $oldtype, $oldversion, $oldformat, $oldhost, $params);
+			$sourcerows[] = $this->sourcerows($columns, $oldsource, $oldversion, $oldformat, $oldhost, $params);
 			unset($params['source']);
 			$result[]  = $this->daterows($sourcerows, $oldyear, $oldmonth, $params);
 			$stmt->free_result();
@@ -569,8 +565,8 @@ class TlnData {
 	private function daterows (&$rows, $year, $month, $params) {
 		return array($month . '/' . $year, $rows, $params);
 	}
-	private function sourcerows (&$columns, $source, $oldtype, $oldversion, $oldformat, $oldhost, $params) { 
-		return array($source, $columns, $params, $oldtype, $oldversion, $oldformat, $oldhost);
+	private function sourcerows (&$columns, $source, $oldversion, $oldformat, $oldhost, $params) { 
+		return array($source, $columns, $params, $oldversion, $oldformat, $oldhost);
 	}
 	private function columns(&$columns, $m, $a, $c, $b, $items, $params) {
 		$myparams = $params; 

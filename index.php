@@ -23,10 +23,10 @@ function default_view($tln) {
 		$my_params['view'] = 'detail';
 		print '<a href="' . $tln->h2q($my_params) . '" >(details)</a></td>';
 		foreach ($daterow[1] as $sourcerow) {
-			print '<td>' . $sourcerow[6] . '</td>';
-			print '<td><a href="' . $tln->h2q($sourcerow[2]) . '" >' . $sourcerow[0] . '</a></td>';
 			print '<td>' . $sourcerow[5] . '</td>';
+			print '<td><a href="' . $tln->h2q($sourcerow[2]) . '" >' . $sourcerow[0] . '</a></td>';
 			print '<td>' . $sourcerow[4] . '</td>';
+			print '<td>' . $sourcerow[3] . '</td>';
 			if (array_key_exists('M', $sourcerow[1])) {
 				print '<td><a href="' . $tln->h2q($sourcerow[1]['M'][1]) . '" >' . $sourcerow[1]['M'][0] . '</a></td>';
 			} else {
