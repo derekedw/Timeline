@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+  <project name="Timeline" default="install">
+     <target name="install">
+        <echo>Copying PHP scripts to server</echo>
+        <copy todir="d:/www/Timeline">
+        	<fileset dir=".">
+        		<include name="*.php" />
+        	</fileset>
+        </copy>
+     </target>
+  </project>
