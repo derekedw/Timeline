@@ -583,7 +583,7 @@ class TlnData {
 			$columns['B'] = array($items, $myparams);
 		}
 		unset($myparams['macb']);
-		$columns['total'] = array($columns['total'][0] + $columns['M'][0] + $columns['A'][0] + $columns['C'][0] + $columns['B'][0], $myparams);
+		$columns['total'] = array($columns['M'][0] + $columns['A'][0] + $columns['C'][0] + $columns['B'][0], $myparams);
 		return $columns;
 	}
 	function get_macb($macb) {
