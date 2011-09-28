@@ -1,6 +1,7 @@
 <?php
 
 function default_view($tln, $params) {
+	$run_once = false;
 	if (count($result = $tln->get_view($params)) <= 0)
 		return false;
 	print "<html><body><table><tbody> 
@@ -20,10 +21,16 @@ function default_view($tln, $params) {
 	  	</thead>\n";
 	if (count($result) > 0) {
 		foreach ($result as $daterow) {
-			print '<tr><td rowspan="' . count($daterow[1]) . '" ><a href="' . $tln->h2q($daterow[2]) . '" >' . $daterow[0] . '</a> ';
-			$my_params = $daterow[2];
-			$my_params['view'] = 'detail';
-			print '<a href="' . $tln->h2q($my_params) . '" >(details)</a></td>';
+			$my_params=$daterow[2];
+			if ( ! $run_once) {
+				print "<tbody>\n";
+				print '<tr><td colspan="10"><a href="' . $tln->h2q($my_params[0]) . '" >continue</a></tr>';
+				$run_once = true;
+			}
+			print '<tr><td rowspan="' . count($daterow[1]) . '" >' . $daterow[0] . 
+				'<a href="' . $tln->h2q($my_params[1]) . '" >[+]</a> ' .
+				'<a href="' . $tln->h2q($my_params[2]) . '" >[-]</a> ' .
+				'<a href="' . $tln->h2q($my_params[3]) . '" >(details)</a></td>';
 			foreach ($daterow[1] as $sourcerow) {
 				print '<td>' . $sourcerow[5] . '</td>';
 				print '<td><a href="' . $tln->h2q($sourcerow[2]) . '" >' . $sourcerow[0] . '</a></td>';
@@ -57,10 +64,13 @@ function default_view($tln, $params) {
 				print "</tr>\n";
 			}
 		}
+		$my_params=$daterow[2];
+		print '<tr><td colspan="10"><a href="' . $tln->h2q($my_params[0]) . '" >continue</a> ';
+		print "</tbody></table>\n";
 	} else {
 		print $tln->h1("No data");
 	}
-	print "</tbody></table></body></html>\n";
+	print "</body></html>\n";
 }
 
 require_once('tln-config.php');
@@ -85,8 +95,10 @@ if ($input) {
 	if (array_key_exists('view', $_GET)) {
 		if ($_GET['view'] == 'detail') {
 			$result = $tln->get_detail_view($_GET);
+			$run_once = false;
+			print "<html><body>\n";
 			if (count($result) > 0) { 
-				print "<html><body><table><thead>
+				print "<table><thead>
 		    <tr>
 		      <th>Count</th>
 		      <th>Date</th>
@@ -106,8 +118,14 @@ if ($input) {
 		      <th>Format</th>
 		      <th>Extra</th>
 		    </tr>
-		  	</thead><tbody>\n";
+		  	</thead>\n";
 				foreach ($result as $row) {
+					if ( ! $run_once) {
+						print "<tbody>\n";
+						$my_params=$_GET;
+						print '<tr><td colspan="17"><a href="' . $tln->h2q($my_params) . '" >continue</a> ';
+						$run_once = true;
+					}
 					/* $macb, $count, gmdate("%m/%d/%Y", strtotime($oldkeys[6])), $oldkeys[7], $source, $sourcetype,
 							$user, $host, $short, $description, $version, $filename,
 							$inode, $notes, $format, $extra */
@@ -115,12 +133,17 @@ if ($input) {
 					print '<tr><td>' . implode('</td><td>', $row[1]) . "</td>\n";
 					print '<td>' . $tln->get_macb($macb) . '</td>';
 					print '<td>' . implode('</td><td>', $row[2]) . "</td></tr>\n";				
-				}
-				print "</tbody></table></body></html>\n";
+				}		
+				$my_params=$_GET;
+				print '<tr><td colspan="17"><a href="' . $tln->h2q($my_params) . '" >continue</a> ';
+				print "</tbody></table>\n";
+			} else {
+				print $tln->h1("No data");
 			}
+			print "</body></html>\n";
 		}
 	} else 
-	default_view($tln, $_GET);
+		default_view($tln, $_GET);
 }
 
 $db->close();

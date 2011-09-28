@@ -555,9 +555,13 @@ class TlnData {
 		return $result;
 	}
 	private function daterows (&$rows, $year, $month, $params) {
-		$myparams = $params;
-		$myparams['datezoom'] = $myparams['datezoom'] + 1; 			
-		return array($year . ' ' . $month, $rows, $myparams);
+		$zoom_in = $params;
+		$zoom_out = $params;
+		$details = $params;
+		$zoom_in['datezoom'] = ($zoom_in['datezoom'] < (count($this->datezoom) - 1)) ? ($zoom_in['datezoom'] + 1) : ($zoom_in['datezoom']); 			
+		$zoom_out['datezoom'] = ($zoom_out['datezoom'] >= 1) ? ($zoom_out['datezoom'] - 1) : ($zoom_out['datezoom']);
+		$details['view'] = 'detail';	
+		return array($year . ' ' . $month, $rows, array($params, $zoom_in, $zoom_out, $details));
 	}
 	private function sourcerows (&$columns, $source, $oldversion, $oldformat, $oldhost, $params) { 
 		return array($source, $columns, $params, $oldversion, $oldformat, $oldhost);
