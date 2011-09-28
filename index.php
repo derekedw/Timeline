@@ -30,7 +30,7 @@ function default_view($tln, $params) {
 			print '<tr><td rowspan="' . count($daterow[1]) . '" >' . $daterow[0] . 
 				'<a href="' . $tln->h2q($my_params[1]) . '" >[+]</a> ' .
 				'<a href="' . $tln->h2q($my_params[2]) . '" >[-]</a> ' .
-				'<a href="' . $tln->h2q($my_params[3]) . '" >(details)</a></td>';
+				'<a href="' . $tln->h2q($my_params[3]) . '" >[details]</a></td>';
 			foreach ($daterow[1] as $sourcerow) {
 				print '<td>' . $sourcerow[5] . '</td>';
 				print '<td><a href="' . $tln->h2q($sourcerow[2]) . '" >' . $sourcerow[0] . '</a></td>';
@@ -123,6 +123,9 @@ if ($input) {
 					if ( ! $run_once) {
 						print "<tbody>\n";
 						$my_params=$_GET;
+						$my_params['go'] = 'forward';
+						$my_params['date'] = $row[1][1];
+						$my_params['time'] = $row[1][2];
 						print '<tr><td colspan="17"><a href="' . $tln->h2q($my_params) . '" >continue</a> ';
 						$run_once = true;
 					}
@@ -134,7 +137,9 @@ if ($input) {
 					print '<td>' . $tln->get_macb($macb) . '</td>';
 					print '<td>' . implode('</td><td>', $row[2]) . "</td></tr>\n";				
 				}		
-				$my_params=$_GET;
+				$my_params['go'] = 'backward';
+				$my_params['date'] = $row[1][1];
+				$my_params['time'] = $row[1][2];
 				print '<tr><td colspan="17"><a href="' . $tln->h2q($my_params) . '" >continue</a> ';
 				print "</tbody></table>\n";
 			} else {

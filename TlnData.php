@@ -405,7 +405,8 @@ class TlnData {
     			) on d.tln_date_id = f.tln_date_id
     			' . $this->get_where($params) . '
     			group by d.date, t.tick, s.sourcetype, f.description, f.filename, f.inode
-    			order by d.date desc, t.tick desc, s.sourcetype, f.description, f.filename, f.inode';
+    			order by d.date desc, t.tick desc, s.sourcetype, f.description, f.filename, f.inode
+    			limit 1000';
 		$result = array();
 		if ($stmt = $this->db->prepare($sql)) {
 			$stmt->execute();
@@ -419,7 +420,7 @@ class TlnData {
 			$keys = array();
 			while ($stmt->fetch()) {
 				$this->columns($macb, $m, $a, $c, $b, $count, $params);  
-				$result[] = array($macb, array($count, gmdate("m/d/Y", strtotime($date)), $tick), array($source, $sourcetype, $type,
+				$result[] = array($macb, array($count, $date, $tick), array($source, $sourcetype, $type,
 					$user, $host, $short, $description, $version, $filename,
 					$inode, $notes, $format, $extra));
 			}
@@ -433,11 +434,32 @@ class TlnData {
 		$datefield = $this->datezoom[$this->datezoom_level]['datefield'];
 		$timefield = $this->datezoom[$this->datezoom_level]['timefield'];;
 		$result = array();
-		if (array_key_exists('year', $params)) {
-			$result[] = $datefield . '=\'' . $params['year'] . '\'';
+		if (array_key_exists('view', $params) && $params['view'] == 'detail') { 
+			if (array_key_exists('go', $params)) {
+				$datefield = 'd.day';
+				$timefield = 't.second';
+				if ($params['go'] == 'forward') {
+					$params['time'] = $params['time'];
+					$op = '>=';
+					$fudge = '';
+				} else {
+					$params['time'] = $params['time'];
+					$op = '<=';
+					$fudge = '';
+				}
+			} else {
+				$op = '='; 
+				$fudge = '';
+			}
+		} else { 
+			$op = '<=';
+			$fudge = '-99';
 		}
-		if (array_key_exists('month', $params) && $params['month'] != '.') {
-			$result[] = $timefield . '=\'' . $params['month'] . '\'';
+		if (array_key_exists('date', $params)) {
+			$result[] = $datefield . $op . '\'' . $params['date'] . $fudge . '\'';
+		}
+		if (array_key_exists('time', $params) && $params['time'] != '.') {
+			$result[] = $timefield . $op . '\'' . $params['time'] . $fudge . '\'';
 		}
 		if (array_key_exists('source', $params)) {
 			$result[] = 's.sourcetype=\'' . $params['source'] . '\'';
@@ -476,7 +498,8 @@ class TlnData {
     				tln_time t inner join (
     					tln_source s inner join tln_fact f on s.tln_source_id = f.tln_source_id
     				) on t.tln_time_id = f.tln_time_id
-    			) on d.tln_date_id = f.tln_date_id
+    			) on d.tln_date_id = f.tln_date_id 
+    			' . $this->get_where($params) . '
     			group by ' . $datefield . ', ' . $timefield . ', s.sourcetype, s.M, s.A, s.C, s.B, s.version, s.format, s.host
     			order by ' . $datefield . ' desc, ' . $timefield . ' desc, s.sourcetype, s.M, s.A, s.C, s.B, s.version, s.format, s.host';
 		$result = array();
@@ -488,11 +511,12 @@ class TlnData {
 			$columns = array();
 			$sourcerows = array();
 			$params['datezoom'] = $this->datezoom_level;
-			while ($stmt->fetch()) {
+			$datetime_count = 0;
+			while ($stmt->fetch() && $datetime_count < 100) {
 				if (( ! isset($oldyear)) || $year == $oldyear) {
-					$params['year'] = $year;
+					$params['date'] = $year;
 					if (( ! isset($oldmonth)) || $month == $oldmonth) {
-						$params['month'] = $month;
+						$params['time'] = $month;
 						if (( ! isset($oldsource)) || $source == $oldsource) {
 							$params['source'] = $source;
 							$this->columns($columns, $m, $a, $c, $b, $items, $params);
@@ -518,13 +542,14 @@ class TlnData {
 						$columns = array();
 						$sourcerows = array();
 						$params['source'] = $source;
-						$params['month'] = $month;
+						$params['time'] = $month;
 						$this->columns($columns, $m, $a, $c, $b, $items, $params);
 						$oldsource = $source;
 						$oldversion = $version; 
 						$oldformat = $format;
 						$oldhost = $host;
 						$oldmonth = $month;
+						$datetime_count++;
 					}
 					$oldyear = $year;
 				} else {
@@ -534,8 +559,8 @@ class TlnData {
 					$columns = array();
 					$sourcerows = array();
 					$params['source'] = $source;
-					$params['month'] = $month;
-					$params['year'] = $year;
+					$params['time'] = $month;
+					$params['date'] = $year;
 					$this->columns($columns, $m, $a, $c, $b, $items, $params);
 					$oldsource = $source;
 					$oldversion = $version; 
