@@ -6,6 +6,14 @@
 <stringAttribute key="org.eclipse.jdt.launching.CLASSPATH_PROVIDER" value="org.eclipse.ant.ui.AntClasspathProvider"/>
 <booleanAttribute key="org.eclipse.jdt.launching.DEFAULT_CLASSPATH" value="true"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="Timeline"/>
+<mapAttribute key="org.eclipse.ui.externaltools.ATTR_ANT_PROPERTIES">
+<mapEntry key="eclipse.home" value="C:\eclipse"/>
+<mapEntry key="eclipse.pdebuild.home" value="/C:/eclipse/plugins/org.eclipse.pde.build_3.6.2.R36x_20110203/./"/>
+<mapEntry key="eclipse.pdebuild.scripts" value="/C:/eclipse/plugins/org.eclipse.pde.build_3.6.2.R36x_20110203/scripts/"/>
+<mapEntry key="eclipse.pdebuild.templates" value="/C:/eclipse/plugins/org.eclipse.pde.build_3.6.2.R36x_20110203/templates/"/>
+<mapEntry key="eclipse.running" value="true"/>
+<mapEntry key="timeline.docroot" value="d:\www\Timeline"/>
+</mapAttribute>
 <stringAttribute key="org.eclipse.ui.externaltools.ATTR_LOCATION" value="${workspace_loc:/Timeline/build.xml}"/>
 <stringAttribute key="org.eclipse.ui.externaltools.ATTR_RUN_BUILD_KINDS" value="full,incremental,auto,"/>
 <booleanAttribute key="org.eclipse.ui.externaltools.ATTR_TRIGGERS_CONFIGURED" value="true"/>
