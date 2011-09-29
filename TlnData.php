@@ -299,7 +299,7 @@ class TlnData {
 		$sql = "insert into tln_import (date,tick,timezone,M,A,C,B,source,sourcetype,type,user,host,short,description,version,filename,inode,notes,format,extra,tln_concurrency_id) values\n";
 		foreach(preg_split('/\n/', $text) as $input) {
 			if (! $this->validate_content($input)) {
-				print "Invalid entry: '" . $input . "'\n";
+				print "Skipped entry: '" . $input . "'\n";
 				$skipped++;
 				continue;
 			}
@@ -394,6 +394,13 @@ class TlnData {
 	}
 	function get_detail_view($params){
 		$starttime = time();
+		if (array_key_exists('go', $params)) {
+			if ($params['go'] == 'forward') {
+				$order = '';
+			} else {
+				$order = 'DESC';
+			}
+		}
 		$sql = 'select sum(count) as count, 
 					d.date, t.tick, s.source, s.sourcetype, 
 					s.m, s.a, s.c, s.b,	f.user, s.host, f.short, f.description, 
@@ -405,7 +412,7 @@ class TlnData {
     			) on d.tln_date_id = f.tln_date_id
     			' . $this->get_where($params) . '
     			group by d.date, t.tick, s.sourcetype, f.description, f.filename, f.inode
-    			order by d.date desc, t.tick desc, s.sourcetype, f.description, f.filename, f.inode
+    			order by d.date ' . $order . ', t.tick ' . $order . ', s.sourcetype, f.description, f.filename, f.inode
     			limit 1000';
 		$result = array();
 		if ($stmt = $this->db->prepare($sql)) {
@@ -425,6 +432,11 @@ class TlnData {
 					$inode, $notes, $format, $extra));
 			}
 			$stmt->free_result();
+		}
+		if (array_key_exists('go', $params)) {
+			if ($params['go'] == 'forward') {
+				return array_reverse($result);
+			} 
 		}
 		return $result;
 	}

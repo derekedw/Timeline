@@ -2,7 +2,7 @@
   <project name="Timeline" default="install">
      <target name="install">
         <echo>Copying PHP scripts to server</echo>
-        <copy todir="d:/www/Timeline">
+        <copy todir="e:/www/Timeline">
         	<fileset dir=".">
         		<include name="*.php" />
         	</fileset>
