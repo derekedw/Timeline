@@ -463,7 +463,10 @@ class TlnData {
 				$op = '='; 
 				$fudge = '';
 			}
-		} else { 
+		} elseif (array_key_exists('go', $params) && $params['go'] == 'forward') { 
+			$op = '>=';
+			$fudge = '';
+		} else {
 			$op = '<=';
 			$fudge = '-99';
 		}
@@ -503,6 +506,10 @@ class TlnData {
 		$starttime = time();
 		if (array_key_exists('datezoom', $params)) 
 			$this->datezoom_level = $params['datezoom'];
+		if (array_key_exists('go', $params) && $params['go'] == 'forward') 
+			$order = '';
+		else 
+			$order = 'desc';
 		$datefield = $this->datezoom[$this->datezoom_level]['datefield'];
 		$timefield = $this->datezoom[$this->datezoom_level]['timefield'];;
 		$sql = 'select ' . $datefield . ', ' . $timefield . ', s.sourcetype, s.M, s.A, s.C, s.B, sum(f.count) as items, s.version, s.format, s.host
@@ -513,7 +520,7 @@ class TlnData {
     			) on d.tln_date_id = f.tln_date_id 
     			' . $this->get_where($params) . '
     			group by ' . $datefield . ', ' . $timefield . ', s.sourcetype, s.M, s.A, s.C, s.B, s.version, s.format, s.host
-    			order by ' . $datefield . ' desc, ' . $timefield . ' desc, s.sourcetype, s.M, s.A, s.C, s.B, s.version, s.format, s.host';
+    			order by ' . $datefield . ' ' . $order . ', ' . $timefield . ' ' . $order . ', s.sourcetype, s.M, s.A, s.C, s.B, s.version, s.format, s.host';
 		$result = array();
 		if ($stmt = $this->db->prepare($sql)) {
 			$stmt->execute();
@@ -589,7 +596,10 @@ class TlnData {
 			print $this->p('Error getting detail view: ' . $this->db->error);
 			return false;
 		}
-		return $result;
+		if (array_key_exists('go', $params) && $params['go'] == 'forward') 
+			return array_reverse($result);
+		else 
+			return $result;
 	}
 	private function daterows (&$rows, $year, $month, $params) {
 		$zoom_in = $params;
@@ -598,7 +608,7 @@ class TlnData {
 		$zoom_in['datezoom'] = ($zoom_in['datezoom'] < (count($this->datezoom) - 1)) ? ($zoom_in['datezoom'] + 1) : ($zoom_in['datezoom']); 			
 		$zoom_out['datezoom'] = ($zoom_out['datezoom'] >= 1) ? ($zoom_out['datezoom'] - 1) : ($zoom_out['datezoom']);
 		$details['view'] = 'detail';	
-		return array($year . ' ' . $month, $rows, array($params, $zoom_in, $zoom_out, $details));
+		return array(array($year,$month), $rows, array($params, $zoom_in, $zoom_out, $details));
 	}
 	private function sourcerows (&$columns, $source, $oldversion, $oldformat, $oldhost, $params) { 
 		return array($source, $columns, $params, $oldversion, $oldformat, $oldhost);

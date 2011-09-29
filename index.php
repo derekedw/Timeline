@@ -21,16 +21,19 @@ function default_view($tln, $params) {
 	  	</thead>\n";
 	if (count($result) > 0) {
 		foreach ($result as $daterow) {
-			$my_params=$daterow[2];
+			$my_params=$daterow[2][0];
 			if ( ! $run_once) {
 				print "<tbody>\n";
-				print '<tr><td colspan="10"><a href="' . $tln->h2q($my_params[0]) . '" >continue</a></tr>';
+				$my_params['go'] = 'forward';
+				$my_params['date'] = $daterow[0][0];
+				$my_params['time'] = $daterow[0][1];
+				print '<tr><td colspan="10"><a href="' . $tln->h2q($my_params) . '" >continue</a></tr>';
 				$run_once = true;
 			}
-			print '<tr><td rowspan="' . count($daterow[1]) . '" >' . $daterow[0] . 
-				'<a href="' . $tln->h2q($my_params[1]) . '" >[+]</a> ' .
-				'<a href="' . $tln->h2q($my_params[2]) . '" >[-]</a> ' .
-				'<a href="' . $tln->h2q($my_params[3]) . '" >[details]</a></td>';
+			print '<tr><td rowspan="' . count($daterow[1]) . '" >' . $daterow[0][0] . ' ' . $daterow[0][1] .
+				' <a href="' . $tln->h2q($daterow[2][1]) . '" >[+]</a> ' .
+				'<a href="' . $tln->h2q($daterow[2][2]) . '" >[-]</a> ' .
+				'<a href="' . $tln->h2q($daterow[2][3]) . '" >[details]</a></td>';
 			foreach ($daterow[1] as $sourcerow) {
 				print '<td>' . $sourcerow[5] . '</td>';
 				print '<td><a href="' . $tln->h2q($sourcerow[2]) . '" >' . $sourcerow[0] . '</a></td>';
@@ -64,8 +67,11 @@ function default_view($tln, $params) {
 				print "</tr>\n";
 			}
 		}
-		$my_params=$daterow[2];
-		print '<tr><td colspan="10"><a href="' . $tln->h2q($my_params[0]) . '" >continue</a> ';
+		$my_params=$daterow[2][0];
+		$my_params['go'] = 'backward';
+		$my_params['date'] = $daterow[0][0];
+		$my_params['time'] = $daterow[0][1];
+		print '<tr><td colspan="10"><a href="' . $tln->h2q($my_params) . '" >continue</a> ';
 		print "</tbody></table>\n";
 	} else {
 		print $tln->h1("No data");
