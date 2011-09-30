@@ -94,7 +94,7 @@ if ($input) {
 	$xmlDoc->loadXML(@$input);
 	$nodes = $xmlDoc->getElementsByTagName("Data");
 	if ($nodes->length > 0) {
-		set_time_limit(120);
+		set_time_limit(300);
 		$tln->import($nodes->item(0)->textContent);
 	}
 } else {

@@ -382,7 +382,7 @@ class TlnData {
 			$stmt->bind_result($id, $short, $description);
 			$words = array();
 			while ($stmt->fetch()) {
-				preg_match_all('/\w+([_.@:]\w+)*/', $short . ' ' . $description, $matches); 
+				preg_match_all('/\w+([-_.@:]\w+)*/', $short . ' ' . $description, $matches); 
 				foreach ($matches[0] as $input) {
 					$words[] = '(' . implode(',', array(
 						$id, 
@@ -495,7 +495,7 @@ class TlnData {
 											// COMMIT
 											if ($this->commit($job->getId())) {
 												print 'All done in ' . gmdate("H:i:s", time() - $job->getId());
-												$db->close();
+												$this->db->close();
 												exit(0);
 											}
 										}
