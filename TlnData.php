@@ -181,7 +181,60 @@ class TlnData {
 			return false;
 		}
 	}
-	
+    function create_import_word() {
+		$starttime = time();
+		$sql = 'CREATE TABLE tln_import_word (
+			tln_import_word_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			tln_fact_id BIGINT UNSIGNED NOT NULL,
+	    	word VARCHAR(255) NOT NULL,
+	    	tln_concurrency_id BIGINT UNSIGNED NOT NULL, 
+			PRIMARY KEY (tln_import_word_id),		
+			UNIQUE KEY tln_import_word_uniq(tln_fact_id, word)
+		)';
+		if ($this->db->query($sql) == TRUE) {
+			$endtime = time();
+			print $this->h1('Created \'tln_import_word\' table in ' . gmdate('H:i:s', $endtime - $starttime));
+			return true;
+		} else {
+			print $this->h1('Error creating \'tln_import_word\' table: ' . $this->db->error . "<br />");
+			return false;
+		}
+	}
+	function create_word() {
+		$starttime = time();
+		$sql = 'CREATE TABLE tln_word (
+			tln_word_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+	    	word VARCHAR(255) NOT NULL,
+			UNIQUE KEY tln_word_uniq(word),
+	    	PRIMARY KEY (tln_word_id)		
+		)';
+		if ($this->db->query($sql) == TRUE) {
+			$endtime = time();
+			print $this->h1('Created \'tln_word\' table in ' . gmdate('H:i:s', $endtime - $starttime));
+			return true;
+		} else {
+			print $this->h1('Error creating \'tln_word\' table: ' . $this->db->error . "<br />");
+			return false;
+		}
+	}
+    function create_fact_word() {
+		$starttime = time();
+		$sql = 'CREATE TABLE tln_fact_word (
+			tln_word_id BIGINT UNSIGNED NOT NULL,
+			tln_fact_id BIGINT UNSIGNED NOT NULL,
+	    	PRIMARY KEY (tln_word_id, tln_fact_id),		
+			FOREIGN KEY (tln_fact_id) REFERENCES tln_fact(tln_fact_id),
+			FOREIGN KEY (tln_word_id) REFERENCES tln_word(tln_word_id)
+		)';
+		if ($this->db->query($sql) == TRUE) {
+			$endtime = time();
+			print $this->h1('Created \'tln_fact_word\' table in ' . gmdate('H:i:s', $endtime - $starttime));
+			return true;
+		} else {
+			print $this->h1('Error creating \'tln_fact_word\' table: ' . $this->db->error . "<br />");
+			return false;
+		}
+	}
 	function fill_date() {
 		$count = 0;
 		$rows = array();
@@ -282,12 +335,78 @@ class TlnData {
     				i.tln_concurrency_id = ' . $concurrency . '
     			group by d.tln_date_id, t.tln_time_id, s.tln_source_id, substring(i.description,255), substring(i.filename,255), i.inode';
 		if (! $this->db->query($sql)) {
-			print('Error filling table: ' . $this->db->error . "\n");
+			print('Error filling \'tln_fact\' table: ' . $this->db->error . "\n");
 			return false;
 		}
 		$endtime = time();
 		print $this->db->affected_rows . ' rows added to \'tln_fact\' in ' . gmdate('H:i:s', $endtime - $starttime) . "\n";
 		return true;
+	}
+	private function fill_fact_word($concurrency) {
+		$starttime = time();
+		$sql = 'insert ignore into tln_fact_word(tln_fact_id, tln_word_id)
+				select f.tln_fact_id, w.tln_word_id
+				from tln_fact f, tln_word w, tln_import_word j
+				where f.tln_fact_id = j.tln_fact_id and w.word = j.word';
+    	if (! $this->db->query($sql)) {
+			print('Error filling \'tln_fact_word\' table [' . $this->db->errno . ']: ' . $this->db->error . "\n");
+			return false;
+		}
+		$endtime = time();
+		print $this->db->affected_rows . ' rows added to \'tln_fact_word\' in ' . gmdate('H:i:s', $endtime - $starttime) . "\n";
+		return true;
+	}
+	private function fill_word($concurrency) {
+		$starttime = time();
+		$sql = 'insert ignore into tln_word(word)
+    			select word
+    			from tln_import_word
+    			where tln_concurrency_id = ' . $concurrency;
+		if (! $this->db->query($sql)) {
+			print('Error filling \'tln_word\' table: ' . $this->db->error . "\n");
+			return false;
+		}
+		$endtime = time();
+		print $this->db->affected_rows . ' rows added to \'tln_word\' in ' . gmdate('H:i:s', $endtime - $starttime) . "\n";
+		return true;
+	}
+	private function fill_import_word($concurrency) {
+		$starttime = time();
+		$inserted = 0;
+		$sql = 'select tln_fact_id, short, description 
+				from tln_fact ';
+				// where tln_concurrency_id = ' . $concurrency;
+		if ($stmt = $this->db->prepare($sql)) {
+			$stmt->execute();
+			$stmt->store_result();
+			$stmt->bind_result($id, $short, $description);
+			$words = array();
+			while ($stmt->fetch()) {
+				preg_match_all('/\w+([_.@:]\w+)*/', $short . ' ' . $description, $matches); 
+				foreach ($matches[0] as $input) {
+					$words[] = '(' . implode(',', array(
+						$id, 
+						$concurrency, 
+						'\'' . mysqli_real_escape_string($this->db, $input) . '\'')) . ')';
+				}			
+			}
+			$stmt->free_result();
+			foreach (array_chunk($words, 5000) as $chunk) {
+				$sql = 'insert ignore into tln_import_word (tln_fact_id, tln_concurrency_id, word) values ' . implode(",\n", $chunk);
+				if (! $this->db->query($sql)) {
+					print 'Error filling \'tln_import_word\' table[' . $this->db->errno . ']: ' . $this->db->error . "\n";
+					return false;
+				}
+				$inserted += $this->db->affected_rows;
+			}
+			$endtime = time();
+			print $inserted . ' rows inserted for words extracted in ' . gmdate('H:i:s', $endtime - $starttime) . "\n";
+			return true;	
+		} else {
+			print 'Error extracting words from \'tln_fact\' table: ' . $this->db->error . "\n";
+			return false;
+		}
+		
 	}
 	private function fill_import($concurrency, &$text) {
 		$starttime = time();
@@ -363,11 +482,25 @@ class TlnData {
 				if ($this->fill_source($job->getId())) {
 					// Insert the fact table rows
 					if ($this->fill_fact($job->getId())) {
-						// Empty the imported text 
-						if ($this->empty_import($job->getId())) {
-							// COMMIT
-							if ($this->commit($job->getId())) {
-								return true;		
+						// Extract and save words from the data
+						if ($this->fill_import_word($job->getId())) {
+							// Fill the canonical word list
+							if ($this->fill_word($job->getId())) {
+								// Fill the snowflake of words
+								if ($this->fill_fact_word($job->getId())) {
+									// Empty the imported text 
+									if ($this->empty_import($job->getId())) {
+										// Empty the extracted words
+										if ($this->empty_import_word($job->getId())) {
+											// COMMIT
+											if ($this->commit($job->getId())) {
+												print 'All done in ' . gmdate("H:i:s", time() - $job->getId());
+												$db->close();
+												exit(0);
+											}
+										}
+									}
+								}		
 							 }
 						}
 					}	
@@ -390,6 +523,20 @@ class TlnData {
 		$inserted = $this->db->affected_rows;
 		$endtime = time();
 		print $inserted . ' tln_import rows deleted in ' . gmdate('H:i:s', $endtime - $starttime) . "\n";
+		return true;
+	}
+	private function empty_import_word($concurrency) {
+		$starttime = time();
+		$inserted = 0;
+		$delete = 'delete from tln_import_word
+					where tln_concurrency_id = ' . $concurrency;
+		if (! $this->db->query($delete)) {
+			print 'Error emptying \'tln_import_word\' table: ' . $this->db->error . "\n";
+			return false;
+		}
+		$inserted = $this->db->affected_rows;
+		$endtime = time();
+		print $inserted . ' tln_import_word rows deleted in ' . gmdate('H:i:s', $endtime - $starttime) . "\n";
 		return true;
 	}
 	function get_detail_view($params){

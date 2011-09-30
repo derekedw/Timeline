@@ -15,17 +15,23 @@ if (Job::create($db)) {
 	$job = Job::get_new();
 	$tln = new TlnData($db);
 	if ($tln->create_date()) {
-		if ($tln->fill_date($db)) {
+		if ($tln->fill_date()) {
 			if ($tln->create_time()) {
-				if ($tln->fill_time($db)) {
+				if ($tln->fill_time()) {
 					if ($tln->create_version()) {
 						if ($tln->create_import()) {
 							if ($tln->create_source()) {
 								if ($tln->create_fact()) {
-									if ($tln->fill_version($db)) { 
-										print $tln->h1('All done in ' . gmdate("H:i:s", time() - $job->getId()));
-										$db->close();
-										exit(0);
+									if ($tln->create_import_word()) {
+										if ($tln->create_word()) {
+											if ($tln->create_fact_word()) {
+												if ($tln->fill_version()) { 
+													print $tln->h1('All done in ' . gmdate("H:i:s", time() - $job->getId()));
+													$db->close();
+													exit(0);
+												}
+											}
+										}
 									}
 								}
 							}
