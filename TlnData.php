@@ -374,8 +374,8 @@ class TlnData {
 		$starttime = time();
 		$inserted = 0;
 		$sql = 'select tln_fact_id, short, description 
-				from tln_fact ';
-				// where tln_concurrency_id = ' . $concurrency;
+				from tln_fact 
+				where tln_concurrency_id = ' . $concurrency;
 		if ($stmt = $this->db->prepare($sql)) {
 			$stmt->execute();
 			$stmt->store_result();
@@ -494,7 +494,7 @@ class TlnData {
 										if ($this->empty_import_word($job->getId())) {
 											// COMMIT
 											if ($this->commit($job->getId())) {
-												print 'All done in ' . gmdate("H:i:s", time() - $job->getId());
+												print 'All done in ' . gmdate("H:i:s", time() - $job->getId()) . "\n";
 												$this->db->close();
 												exit(0);
 											}
