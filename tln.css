@@ -51,6 +51,10 @@ height:85px;
 }
 #report {
 position:absolute;
+border-top: 1px solid #333;
+border-left: 1px solid #333;
+border-right: 3px solid #333;
+border-bottom: 3px solid #333;
 top:60px;
 clear:both;
 }
@@ -98,10 +102,10 @@ padding:5px;
 
 ul li ul { 
 display: none;  
-border-top: 1px solid #666;
-border-left: 1px solid #666;
-border-right: 2px solid #666;
-border-bottom: 2px solid #666;
+border-top: 1px solid #333;
+border-left: 1px solid #333;
+border-right: 3px solid #333;
+border-bottom: 3px solid #333;
 padding: 3px; 
 margin: 3px;
 background-color: #E6E0FF;
