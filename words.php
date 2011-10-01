@@ -1,3 +1,10 @@
+<html>
+<body>
+<form action="words.php">
+	<input type="text" name="search"></input>
+	<INPUT type="submit" value="ok"></input>
+</form>
+</body></html>
 <?php
 require_once('tln-config.php');
 require_once('TlnData.php');
@@ -7,27 +14,39 @@ if (mysqli_connect_errno()) {
 	die('Database connection error: ' . mysqli_connect_error() . '  Please check \'tfx-config.php\'');
 }
 
-$sql = 'select distinct short, description from tln_fact limit 2500';
-if ($stmt = $db->prepare($sql)) {
-	$stmt->execute();
-	$stmt->store_result();
-	$stmt->bind_result($short, $description);
-	$words = array();
-	while ($stmt->fetch()) {
-		preg_match_all('/\w+([_.@:]\w+)*/', $short . ' ' . $description, $matches); 
-		foreach ($matches[0] as $input) {
-			$words[$input]++;
-		}			
+function get_wordlist($db, $word) {
+	$tln = new TlnData($db);
+	$sql = 'select word
+			from tln_word
+			where word like \'' . $word . '%\' and word regexp \'^[[:alnum:]]+$\'
+			union
+			select word
+			from tln_word
+			where word like \'' . $word . '%\' 
+			union
+			select word
+			from tln_word
+			where word like \'%' . $word . '%\' and word regexp \'^[[:alnum:]]+$\'
+			union
+			select word
+			from tln_word
+			where word like \'%' . $word . '%\'
+			limit 10';
+	if ($stmt = $db->prepare($sql)) {
+		$stmt->execute();
+		$stmt->store_result();
+		$stmt->bind_result($word);
+		$words = array();
+		while ($stmt->fetch()) {
+			$my_params = array('view' => 'detail', 'word' => $word);
+			$result .= '<a href="index.php' . $tln->h2q($my_params) . '">' . $word . "</a><br />\n";	
+		}
+		return $result;
 	}
-	arsort($words);
-	print '<html><body><p>' . count($words) . ' words found</p><table><tbody><tr>';
-	$i = 1;
-	foreach (array_keys($words) as $word) {
-		print '<td>' . $word . "</td><td>" . $words[$word] . "</td>";
-		$i++;
-		if (($i % 10) == 0)
-			print "</tr>\n<tr>";
-	}
-	print "</tr></tbody></table></body></html>\n";
+	return false;
+}
+
+if (array_key_exists('search', $_GET)) {
+	print get_wordlist($db, $_GET['search']);
 }
 ?>

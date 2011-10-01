@@ -1,5 +1,6 @@
 <?php
 
+require_once('functions.php');
 require_once('Job.php');
 
 class TlnData {
@@ -387,7 +388,7 @@ class TlnData {
 					$words[] = '(' . implode(',', array(
 						$id, 
 						$concurrency, 
-						'\'' . mysqli_real_escape_string($this->db, $input) . '\'')) . ')';
+						'\'' . mysqli_real_escape_string($this->db, strtolower($input)) . '\'')) . ')';
 				}			
 			}
 			$stmt->free_result();
@@ -541,12 +542,17 @@ class TlnData {
 	}
 	function get_detail_view($params){
 		$starttime = time();
-		if (array_key_exists('go', $params)) {
-			if ($params['go'] == 'forward') {
-				$order = '';
-			} else {
-				$order = 'DESC';
-			}
+		$order = 'DESC';
+		$word_join = 'tln_fact f';
+		if (array_key_exists('go', $params) && $params['go'] == 'forward') {
+			$order = '';
+		}
+		if (array_key_exists('word', $params)) {
+			$word_join = '(
+							tln_word w inner join (
+								tln_fact_word fw inner join tln_fact f on fw.tln_fact_id = f.tln_fact_id
+							) on w.tln_word_id = fw.tln_word_id
+						)';
 		}
 		$sql = 'select sum(count) as count, 
 					d.date, t.tick, s.source, s.sourcetype, 
@@ -554,7 +560,7 @@ class TlnData {
 					f.filename, f.inode, f.notes, f.extra, s.type, s.version, s.format
     			from tln_date d inner join (
     				tln_time t inner join (
-    					tln_source s inner join tln_fact f on s.tln_source_id = f.tln_source_id
+    					tln_source s inner join ' . $word_join . ' on s.tln_source_id = f.tln_source_id
     				) on t.tln_time_id = f.tln_time_id
     			) on d.tln_date_id = f.tln_date_id
     			' . $this->get_where($params) . '
@@ -610,6 +616,8 @@ class TlnData {
 				$op = '='; 
 				$fudge = '';
 			}
+			if (array_key_exists('word', $params)) 
+				$result[] = 'word = \'' . $params['word'] . '\'';
 		} elseif (array_key_exists('go', $params) && $params['go'] == 'forward') { 
 			$op = '>=';
 			$fudge = '';
@@ -618,12 +626,27 @@ class TlnData {
 			$fudge = '-99';
 		}
 		if (array_key_exists('date', $params)) {
+			$ymd = explode('-', $params['date']);
+			if (array_key_exists(0, $ymd) && ! validate_int($ymd[0], 1970, 2070))
+				return false;
+			if (array_key_exists(1, $ymd) && ! validate_int($ymd[1], 1, 12))
+				return false;			
+			if (array_key_exists(2, $ymd) && ! validate_int($ymd[2], 1, 31))
+				return false;
 			$result[] = $datefield . $op . '\'' . $params['date'] . $fudge . '\'';
 		}
 		if (array_key_exists('time', $params) && $params['time'] != '.') {
+			$hms = explode('-', $params['time']);
+			if (array_key_exists(0, $hms) && ! validate_int($hms[0], 0, 23))
+				return false;
+			if (array_key_exists(1, $hms) && ! validate_int($hms[1], 0, 59))
+				return false;			
+			if (array_key_exists(2, $hms) && ! validate_int($hms[2], 0, 23))
+				return false;
 			$result[] = $timefield . $op . '\'' . $params['time'] . $fudge . '\'';
 		}
 		if (array_key_exists('source', $params)) {
+			/* TODO set validation for this parameter */
 			$result[] = 's.sourcetype=\'' . $params['source'] . '\'';
 		}
 		if (array_key_exists('macb', $params)) {
