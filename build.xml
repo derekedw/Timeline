@@ -5,6 +5,7 @@
         <copy todir="${timeline.docroot}">
         	<fileset dir=".">
         		<include name="*.php" />
+        		<include name="*.css" />
         	</fileset>
         </copy>
      </target>

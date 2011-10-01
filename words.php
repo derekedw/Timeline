@@ -1,10 +1,12 @@
 <html>
+<head>
+<link href="tln.css" type="text/css" rel="stylesheet">
+</head>
 <body>
-<form action="words.php">
-	<input type="text" name="search"></input>
-	<INPUT type="submit" value="ok"></input>
-</form>
-</body></html>
+<div id="wordSelector">
+<form action="index.php">
+	<ul><li><input type="text" name="search"></input>
+	<INPUT type="submit" value="search"></input>
 <?php
 require_once('tln-config.php');
 require_once('TlnData.php');
@@ -15,32 +17,33 @@ if (mysqli_connect_errno()) {
 }
 
 function get_wordlist($db, $word) {
+	$result = '<ul>';
 	$tln = new TlnData($db);
 	$sql = 'select word
 			from tln_word
-			where word like \'' . $word . '%\' and word regexp \'^[[:alnum:]]+$\'
+			where word like \'' . strtolower($word) . '%\' and word regexp \'^[[:alnum:]]+$\'
 			union
 			select word
 			from tln_word
-			where word like \'' . $word . '%\' 
+			where word like \'' . strtolower($word) . '%\' 
 			union
 			select word
 			from tln_word
-			where word like \'%' . $word . '%\' and word regexp \'^[[:alnum:]]+$\'
+			where word like \'%' . strtolower($word) . '%\' and word regexp \'^[[:alnum:]]+$\'
 			union
 			select word
 			from tln_word
-			where word like \'%' . $word . '%\'
+			where word like \'%' . strtolower($word) . '%\'
 			limit 10';
 	if ($stmt = $db->prepare($sql)) {
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($word);
-		$words = array();
+		$stmt->bind_result($suggestion);
 		while ($stmt->fetch()) {
-			$my_params = array('view' => 'detail', 'word' => $word);
-			$result .= '<a href="index.php' . $tln->h2q($my_params) . '">' . $word . "</a><br />\n";	
+			$my_params = array('view' => 'detail', 'word' => $suggestion);
+			$result .= '<li><a href="index.php' . $tln->h2q($my_params) . '">' . $suggestion . "</a></li>\n";	
 		}
+		$result .= '</ul>';
 		return $result;
 	}
 	return false;
@@ -50,3 +53,7 @@ if (array_key_exists('search', $_GET)) {
 	print get_wordlist($db, $_GET['search']);
 }
 ?>
+</li></ul>
+</form>
+</div><!-- end srcSelector -->
+</body></html>

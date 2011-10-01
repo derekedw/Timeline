@@ -4,7 +4,7 @@ function default_view($tln, $params) {
 	$run_once = false;
 	if (count($result = $tln->get_view($params)) <= 0)
 		return false;
-	print "<html><body><table><tbody> 
+	print "<table><tbody> 
 		<thead>
 	    <tr>
 	      <th>Date Time</th>
@@ -20,6 +20,7 @@ function default_view($tln, $params) {
 	    </tr>
 	  	</thead>\n";
 	if (count($result) > 0) {
+		$i=0;
 		foreach ($result as $daterow) {
 			$my_params=$daterow[2][0];
 			if ( ! $run_once) {
@@ -30,11 +31,14 @@ function default_view($tln, $params) {
 				print '<tr><td colspan="10"><a href="' . $tln->h2q($my_params) . '" >continue</a></tr>';
 				$run_once = true;
 			}
-			print '<tr><td rowspan="' . count($daterow[1]) . '" >' . $daterow[0][0] . ' ' . $daterow[0][1] .
+			print '<tr class="d' . $i%2 . '"><td rowspan="' . count($daterow[1]) . '" >' . $daterow[0][0] . ' ' . $daterow[0][1] .
 				' <a href="' . $tln->h2q($daterow[2][1]) . '" >[+]</a> ' .
 				'<a href="' . $tln->h2q($daterow[2][2]) . '" >[-]</a> ' .
 				'<a href="' . $tln->h2q($daterow[2][3]) . '" >[details]</a></td>';
+			$firstrow=true;
 			foreach ($daterow[1] as $sourcerow) {
+				if (!$firstrow)
+					print '<tr class="d' . $i%2 . '">';
 				print '<td>' . $sourcerow[5] . '</td>';
 				print '<td><a href="' . $tln->h2q($sourcerow[2]) . '" >' . $sourcerow[0] . '</a></td>';
 				print '<td>' . $sourcerow[4] . '</td>';
@@ -65,7 +69,9 @@ function default_view($tln, $params) {
 					print '<td>0</td>';
 				}
 				print "</tr>\n";
+				$firstrow=false;
 			}
+			$i++;
 		}
 		$my_params=$daterow[2][0];
 		$my_params['go'] = 'backward';
@@ -76,7 +82,7 @@ function default_view($tln, $params) {
 	} else {
 		print $tln->h1("No data");
 	}
-	print "</body></html>\n";
+	print "</div></body></html>\n";
 }
 
 require_once('tln-config.php');
@@ -97,12 +103,21 @@ if ($input) {
 		set_time_limit(300);
 		$tln->import($nodes->item(0)->textContent);
 	}
-} else {
+} else { ?>
+<html>
+<head>
+<link href="tln.css" type="text/css" rel="stylesheet">
+</head>
+<body>
+<?php 
+	include 'words.php';
+?>
+	<div id="report">
+<?php 
 	if (array_key_exists('view', $_GET)) {
 		if ($_GET['view'] == 'detail') {
 			$result = $tln->get_detail_view($_GET);
 			$run_once = false;
-			print "<html><body>\n";
 			if (count($result) > 0) { 
 				print "<table><thead>
 		    <tr>
@@ -125,6 +140,7 @@ if ($input) {
 		      <th>Extra</th>
 		    </tr>
 		  	</thead>\n";
+				$i=0;
 				foreach ($result as $row) {
 					if ( ! $run_once) {
 						print "<tbody>\n";
@@ -139,9 +155,10 @@ if ($input) {
 							$user, $host, $short, $description, $version, $filename,
 							$inode, $notes, $format, $extra */
 					$macb = $row[0];
-					print '<tr><td>' . implode('</td><td>', $row[1]) . "</td>\n";
+					print '<tr class="d' . $i%2 . '"><td>' . implode('</td><td>', $row[1]) . "</td>\n";
 					print '<td>' . $tln->get_macb($macb) . '</td>';
-					print '<td>' . implode('</td><td>', $row[2]) . "</td></tr>\n";				
+					print '<td>' . implode('</td><td>', $row[2]) . "</td></tr>\n";		
+					$i++;		
 				}		
 				$my_params['go'] = 'backward';
 				$my_params['date'] = $row[1][1];
@@ -151,7 +168,7 @@ if ($input) {
 			} else {
 				print $tln->h1("No data");
 			}
-			print "</body></html>\n";
+			print "</div></body></html>\n";
 		}
 	} else 
 		default_view($tln, $_GET);
