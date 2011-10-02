@@ -12,7 +12,7 @@
 <mapEntry key="eclipse.pdebuild.scripts" value="/C:/eclipse/plugins/org.eclipse.pde.build_3.6.2.R36x_20110203/scripts/"/>
 <mapEntry key="eclipse.pdebuild.templates" value="/C:/eclipse/plugins/org.eclipse.pde.build_3.6.2.R36x_20110203/templates/"/>
 <mapEntry key="eclipse.running" value="true"/>
-<mapEntry key="timeline.docroot" value="d:\www\Timeline"/>
+<mapEntry key="timeline.docroot" value="e:\www\Timeline"/>
 </mapAttribute>
 <stringAttribute key="org.eclipse.ui.externaltools.ATTR_LOCATION" value="${workspace_loc:/Timeline/build.xml}"/>
 <stringAttribute key="org.eclipse.ui.externaltools.ATTR_RUN_BUILD_KINDS" value="full,incremental,auto,"/>

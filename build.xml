@@ -4,6 +4,7 @@
         <echo>Copying PHP scripts to server</echo>
         <copy todir="${timeline.docroot}">
         	<fileset dir=".">
+        		<include name="*.png" />
         		<include name="*.php" />
         		<include name="*.css" />
         	</fileset>

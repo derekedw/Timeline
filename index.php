@@ -109,6 +109,7 @@ if ($input) {
 <link href="tln.css" type="text/css" rel="stylesheet">
 </head>
 <body>
+<img alt="Tapestry" src="tapestry.png">
 <?php 
 	include 'words.php';
 ?>
