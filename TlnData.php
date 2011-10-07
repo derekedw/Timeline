@@ -682,15 +682,15 @@ class TlnData {
 			$order = 'desc';
 		$datefield = $this->datezoom[$this->datezoom_level]['datefield'];
 		$timefield = $this->datezoom[$this->datezoom_level]['timefield'];;
-		$sql = 'select ' . $datefield . ', ' . $timefield . ', s.sourcetype, s.M, s.A, s.C, s.B, sum(f.count) as items, s.version, s.format, s.host
+		$sql = 'select ' . $datefield . ', ' . $timefield . ', s.sourcetype, count(s.M), count(s.A), count(s.C), count(s.B), sum(f.count) as items, s.version, s.format, s.host
     			from tln_date d inner join (
     				tln_time t inner join (
     					tln_source s inner join tln_fact f on s.tln_source_id = f.tln_source_id
     				) on t.tln_time_id = f.tln_time_id
     			) on d.tln_date_id = f.tln_date_id 
     			' . $this->get_where($params) . '
-    			group by ' . $datefield . ', ' . $timefield . ', s.sourcetype, s.M, s.A, s.C, s.B, s.version, s.format, s.host
-    			order by ' . $datefield . ' ' . $order . ', ' . $timefield . ' ' . $order . ', s.sourcetype, s.M, s.A, s.C, s.B, s.version, s.format, s.host';
+    			group by ' . $datefield . ', ' . $timefield . ', s.sourcetype, s.version, s.format, s.host
+    			order by ' . $datefield . ' ' . $order . ', ' . $timefield . ' ' . $order . ', s.sourcetype, s.version, s.format, s.host';
 		$result = array();
 		if ($stmt = $this->db->prepare($sql)) {
 			$stmt->execute();
@@ -705,27 +705,12 @@ class TlnData {
 				if (( ! isset($oldyear)) || $year == $oldyear) {
 					$params['date'] = $year;
 					if (( ! isset($oldmonth)) || $month == $oldmonth) {
+						$params['source'] = $source;
 						$params['time'] = $month;
-						if (( ! isset($oldsource)) || $source == $oldsource) {
-							$params['source'] = $source;
-							$this->columns($columns, $m, $a, $c, $b, $items, $params);
-							$oldsource = $source;
-							$oldversion = $version; 
-							$oldformat = $format;
-							$oldhost = $host;
-						} else {
-							$sourcerows[] = $this->sourcerows($columns, $oldsource, $oldversion, $oldformat, $oldhost, $params);
-							$columns = array();
-							$params['source'] = $source;
-							$this->columns($columns, $m, $a, $c, $b, $items, $params);
-							$oldsource = $source;
-							$oldversion = $version; 
-							$oldformat = $format;
-							$oldhost = $host;
-						}
+						$this->columns($columns, $m, $a, $c, $b, $items, $params);
+						$sourcerows[] = $this->sourcerows($columns, $source, $version, $format, $host, $params);
 						$oldmonth = $month;
 					} else {
-						$sourcerows[] = $this->sourcerows($columns, $oldsource, $oldversion, $oldformat, $oldhost, $params);
 						unset($params['source']);
 						$result[] = $this->daterows($sourcerows, $year, $oldmonth, $params);
 						$columns = array();
@@ -733,34 +718,28 @@ class TlnData {
 						$params['source'] = $source;
 						$params['time'] = $month;
 						$this->columns($columns, $m, $a, $c, $b, $items, $params);
-						$oldsource = $source;
-						$oldversion = $version; 
-						$oldformat = $format;
-						$oldhost = $host;
+						$sourcerows[] = $this->sourcerows($columns, $source, $version, $format, $host, $params);
 						$oldmonth = $month;
 						$datetime_count++;
 					}
 					$oldyear = $year;
 				} else {
-					$sourcerows[] = $this->sourcerows($columns, $oldsource, $oldversion, $oldformat, $oldhost, $params);
 					unset($params['source']);
-					$result[]  = $this->daterows($sourcerows, $oldyear, $oldmonth, $params);
+					$result[] = $this->daterows($sourcerows, $oldyear, $oldmonth, $params);
 					$columns = array();
 					$sourcerows = array();
 					$params['source'] = $source;
 					$params['time'] = $month;
 					$params['date'] = $year;
 					$this->columns($columns, $m, $a, $c, $b, $items, $params);
-					$oldsource = $source;
-					$oldversion = $version; 
-					$oldformat = $format;
+					$sourcerows[] = $this->sourcerows($columns, $source, $version, $format, $host, $params);
 					$oldmonth = $month;
 					$oldyear = $year;
+					$datetime_count++;
 				}
 			}
-			$sourcerows[] = $this->sourcerows($columns, $oldsource, $oldversion, $oldformat, $oldhost, $params);
 			unset($params['source']);
-			$result[]  = $this->daterows($sourcerows, $oldyear, $oldmonth, $params);
+			$result[] = $this->daterows($sourcerows, $oldyear, $oldmonth, $params);		
 			$stmt->free_result();
 		} else {
 			print $this->p('Error getting detail view: ' . $this->db->error);
@@ -785,26 +764,17 @@ class TlnData {
 	}
 	private function columns(&$columns, $m, $a, $c, $b, $items, $params) {
 		$myparams = $params; 
-		$total = 0;
 		$myparams['view'] = 'detail';
-		if ($m == 'M') {
-			$myparams['macb'] = 'M';
-			$columns['M'] = array($items, $myparams);
-		}
-		if ($a == 'A') {
-			$myparams['macb'] = 'A';
-			$columns['A'] = array($items, $myparams);
-		}
-		if ($c == 'C') {
-			$myparams['macb'] = 'C';
-			$columns['C'] = array($items, $myparams);
-		}
-		if ($b == 'B') {
-			$myparams['macb'] = 'B';
-			$columns['B'] = array($items, $myparams);
-		}
+		$myparams['macb'] = 'M';
+		$columns['M'] = array($m, $myparams);
+		$myparams['macb'] = 'A';
+		$columns['A'] = array($a, $myparams);
+		$myparams['macb'] = 'C';
+		$columns['C'] = array($c, $myparams);
+		$myparams['macb'] = 'B';
+		$columns['B'] = array($b, $myparams);
 		unset($myparams['macb']);
-		$columns['total'] = array($columns['M'][0] + $columns['A'][0] + $columns['C'][0] + $columns['B'][0], $myparams);
+		$columns['total'] = array($items, $myparams);
 		return $columns;
 	}
 	function get_macb($macb) {
