@@ -780,19 +780,19 @@ class TlnData {
 	function get_macb($macb) {
 		$result = '';
 		if (array_key_exists('M', $macb))
-			$result .= 'M';
+			$result .= $macb['M'][0];
 		else 
 			$result .= '.';
 		if (array_key_exists('A', $macb))
-			$result .= 'A';
+			$result .= $macb['A'][0];
 		else 
 			$result .= '.';
 		if (array_key_exists('C', $macb)) 
-			$result .= 'C';
+			$result .= $macb['C'][0];
 		else 
 			$result .= '.';
 		if (array_key_exists('B', $macb)) 
-			$result .= 'B';
+			$result .= $macb['B'][0];
 		else 
 			$result .= '.';
 		return $result;

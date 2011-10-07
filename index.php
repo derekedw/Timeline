@@ -44,29 +44,29 @@ function default_view($tln, $params) {
 				print '<td>' . $sourcerow[4] . '</td>';
 				print '<td>' . $sourcerow[3] . '</td>';
 				if (array_key_exists('M', $sourcerow[1])) {
-					print '<td><a href="' . $tln->h2q($sourcerow[1]['M'][1]) . '" >' . $sourcerow[1]['M'][0] . '</a></td>';
+					print '<td style="text-align:right;"><a href="' . $tln->h2q($sourcerow[1]['M'][1]) . '" >' . $sourcerow[1]['M'][0] . '</a></td>';
 				} else {
-					print '<td>0</td>';
+					print '<td style="text-align:right;">0</td>';
 				}
 				if (array_key_exists('A', $sourcerow[1])) {
-					print '<td><a href="' . $tln->h2q($sourcerow[1]['A'][1]) . '" >' . $sourcerow[1]['A'][0] . '</a></td>';
+					print '<td style="text-align:right;"><a href="' . $tln->h2q($sourcerow[1]['A'][1]) . '" >' . $sourcerow[1]['A'][0] . '</a></td>';
 				} else {
-					print '<td>0</td>';
+					print '<td style="text-align:right;">0</td>';
 				}
 				if (array_key_exists('C', $sourcerow[1])) {
-					print '<td><a href="' . $tln->h2q($sourcerow[1]['C'][1]) . '" >' . $sourcerow[1]['C'][0] . '</a></td>';
+					print '<td style="text-align:right;"><a href="' . $tln->h2q($sourcerow[1]['C'][1]) . '" >' . $sourcerow[1]['C'][0] . '</a></td>';
 				} else {
-					print '<td>0</td>';
+					print '<td style="text-align:right;">0</td>';
 				}
 				if (array_key_exists('B', $sourcerow[1])) {
-					print '<td><a href="' . $tln->h2q($sourcerow[1]['B'][1]) . '" >' . $sourcerow[1]['B'][0] . '</a></td>';
+					print '<td style="text-align:right;"><a href="' . $tln->h2q($sourcerow[1]['B'][1]) . '" >' . $sourcerow[1]['B'][0] . '</a></td>';
 				} else {
-					print '<td>0</td>';
+					print '<td style="text-align:right;">0</td>';
 				}
 				if (array_key_exists('total', $sourcerow[1])) {
-					print '<td><a href="' . $tln->h2q($sourcerow[1]['total'][1]) . '" >' . $sourcerow[1]['total'][0] . '</a></td>';
+					print '<td style="text-align:right;"><a href="' . $tln->h2q($sourcerow[1]['total'][1]) . '" >' . $sourcerow[1]['total'][0] . '</a></td>';
 				} else {
-					print '<td>0</td>';
+					print '<td style="text-align:right;">0</td>';
 				}
 				print "</tr>\n";
 				$firstrow=false;
