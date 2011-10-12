@@ -416,10 +416,11 @@ class TlnData {
 		$dup = 0;
 		$count = 0;
 		$rows = array();
+		print "Skipped entries: ";
 		$sql = "insert into tln_import (date,tick,timezone,M,A,C,B,source,sourcetype,type,user,host,short,description,version,filename,inode,notes,format,extra,tln_concurrency_id) values\n";
 		foreach(preg_split('/\n/', $text) as $input) {
 			if (! $this->validate_content($input)) {
-				print "Skipped entry: '" . $input . "'\n";
+				print "'" . $input . "', ";
 				$skipped++;
 				continue;
 			}
