@@ -107,6 +107,7 @@ if ($input) {
 <html>
 <head>
 <link href="tln.css" type="text/css" rel="stylesheet">
+<script type="text/javascript" src="select.js" ></script>
 </head>
 <body>
 <img alt="Tapestry" src="tapestry.png">
@@ -156,7 +157,7 @@ if ($input) {
 							$user, $host, $short, $description, $version, $filename,
 							$inode, $notes, $format, $extra */
 					$macb = $row[0];
-					print '<tr class="d' . $i%2 . '"><td>' . implode('</td><td>', $row[1]) . "</td>\n";
+					print '<tr class="d' . $i%2 . '" onclick="selectRecord(this);"><td>' . implode('</td><td>', $row[1]) . "</td>\n";
 					print '<td>' . $tln->get_macb($macb) . '</td>';
 					print '<td>' . implode('</td><td>', $row[2]) . "</td></tr>\n";		
 					$i++;		

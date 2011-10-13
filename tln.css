@@ -8,14 +8,45 @@ font-size:small;
 tr td {
 background-color: #E6E0FF;
 color: black;
+padding: 2px;
+}
+tr:hover td {
+border-top:2px solid #eeeeee;
+border-left:2px solid #eeeeee;
+border-bottom:2px solid gray;
+border-right:2px solid gray;
+padding: 0px;
+}
+tr.depressed0 td {
+border-top:2px solid gray;
+border-left:2px solid gray;
+border-bottom:2px solid #eeeeee;
+border-right:2px solid #eeeeee;
+padding: 0px;
 }
 tr.d0 td {
 background-color: #ffffff; 
 color: black;
 }
+tr.depressed0 td {
+background-color: #ffffff; 
+border-top:2px solid gray;
+border-left:2px solid gray;
+border-bottom:2px solid #eeeeee;
+border-right:2px solid #eeeeee;
+padding: 0px;
+}
 tr.d1 td {
 background-color: #E6E0FF;
 color: black;
+}
+tr.depressed1 td {
+background-color: #E6E0FF; 
+border-top:2px solid gray;
+border-left:2px solid gray;
+border-bottom:2px solid #eeeeee;
+border-right:2px solid #eeeeee;
+padding: 0px;
 }
 th {
 color:white;

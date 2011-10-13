@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
   <project name="Timeline" default="install">
-     <target name="install">
+     <target name="install" depends="copyJavascript">
         <echo>Copying PHP scripts to server</echo>
         <copy todir="${timeline.docroot}">
         	<fileset dir=".">
@@ -10,4 +10,12 @@
         	</fileset>
         </copy>
      </target>
+  	 <target name="copyJavascript">
+        <echo>Copying Javascript to server</echo>
+  	 	<copy todir="${timeline.docroot}">
+        	<fileset dir=".">
+        		<include name="*.js" />
+        	</fileset>
+  	 	</copy>
+  	 </target>
   </project>
