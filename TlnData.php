@@ -431,10 +431,12 @@ class TlnData {
 				continue;
 			}
 			// date,tick,timezone,MACB,source,sourcetype,type,user,host,short,desc,version,filename,inode,notes,format,extra
+			$tz = new DateTimeZone($elements[2]);
+			$time = new DateTime($elements[0] . ' ' . $elements[1], $tz);
 			$rows[] = '(\'' . implode('\', \'', array(	
-				gmdate('Y-m-d', strtotime($elements[0])),						// date
-				gmdate('H:i:s', strtotime($elements[1])),						// tick 
-				$elements[2], 													// timezone
+				gmdate('Y-m-d', $time->format('U')),							// date
+				gmdate('H:i:s', $time->format('U')),							// tick 
+				'GMT',		 													// timezone
 				substr($elements[3], 0, 1),										// M
 				substr($elements[3], 1, 1),										// A
 				substr($elements[3], 2, 1),										// C
@@ -444,8 +446,10 @@ class TlnData {
 				mysqli_real_escape_string($this->db, $elements[6]),				// type
 				mysqli_real_escape_string($this->db, $elements[7]),				// user
 				mysqli_real_escape_string($this->db, $elements[8]),				// host
-				mysqli_real_escape_string($this->db, $elements[9]),				// short
-				mysqli_real_escape_string($this->db, $elements[10]),			// desc
+				mysqli_real_escape_string($this->db, substr($elements[9], 0, 1000)),
+																				// short
+				mysqli_real_escape_string($this->db, substr($elements[10], 0, 1000)),
+																				// desc
 				mysqli_real_escape_string($this->db, $elements[11]),			// version
 				mysqli_real_escape_string($this->db, $elements[12]),			// filename
 				mysqli_real_escape_string($this->db, $elements[13]),			// inode
@@ -471,7 +475,7 @@ class TlnData {
 		}
 		$inserted += $this->db->affected_rows;
 		$endtime = time();
-		print $inserted . ' import rows inserted, ' . $skipped . ' skipped, ' . $dup . ' duplicates in ' . gmdate('H:i:s', $endtime - $starttime) . "\n";
+		print "\n" . $inserted . ' import rows inserted, ' . $skipped . ' skipped, ' . $dup . ' duplicates in ' . gmdate('H:i:s', $endtime - $starttime) . "\n";
 		return true;
 	}
 	function import(&$text) {
@@ -854,7 +858,7 @@ class TlnData {
 		return true;
 	}
 	private function validate_content($input) {
-		if (! preg_match('@^\d+/\d+/\d+,\d+:\d+:\d+,\w+,[M.][A.][C.][B.],[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+$@', $input, $match)) 
+		if (! preg_match('@^\d+/\d+/\d+,\d+:\d+:\d+,\w+,[M.][A.][C.][B.],[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]*,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+$@', $input, $match)) 
 			return false;
 		return true;
 	}

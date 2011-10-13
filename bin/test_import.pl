@@ -5,7 +5,7 @@ use XML::LibXML;
 
 my $oOutput = XML::LibXML->createDocument;
 
-my $iMaxLines = 2500;
+my $iMaxLines = 2000;
 my $iLineNo = 0;
 
 if ($#ARGV == 0) {
