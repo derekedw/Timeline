@@ -12,7 +12,8 @@ if (mysqli_connect_errno()) {
 }
 
 $tln = new TlnData($db);
-$text = '10/07/1997,00:23:58,GMT,MACB,EXIF,EXIF metadata,PNG/ModifyDate,-,-,ModifyDate,ModifyDate ,2,/mnt/unix//usr/doc/freetype-1.3.1/docs/image/freetype.png,138908,-,Log2t::input::exif,-
+$text = '08/30/2003,13:18:56,EST5EDT,MACB,REG,SOFTWARE key,Last Written,-,-,/ODBC/ODBCINST.INI/Conversor de página de código MS ,Key name: HKLM/Software/ODBC/ODBCINST.INI/Conversor de página de código MS ,2,/mnt/msdos/winnt/repair/software,141699,-,Log2t::input::software,-
+10/07/1997,00:23:58,GMT,MACB,EXIF,EXIF metadata,PNG/ModifyDate,-,-,ModifyDate,ModifyDate ,2,/mnt/unix//usr/doc/freetype-1.3.1/docs/image/freetype.png,138908,-,Log2t::input::exif,-
 10/07/1997,00:16:18,GMT,MACB,EXIF,EXIF metadata,PNG/ModifyDate,-,-,ModifyDate,ModifyDate ,2,/mnt/unix//usr/doc/freetype-1.3.1/docs/image/tfp-back.png,138915,-,Log2t::input::exif,-
 10/22/1998,21:59:08,GMT,MACB,EXIF,EXIF metadata,EXE/TimeStamp,-,-,TimeStamp,TimeStamp PE header TimeDate Stamp (when application was linked/compiled),2,/mnt/unix//usr/doc/mars-nwe-0.99pl17/examples/comm32.exe,1479,-,Log2t::input::exif,-
 03/25/1999,09:57:49,GMT,MACB,EXIF,EXIF metadata,ICC_Profile/ProfileDateTime,-,-,ProfileDateTime,ProfileDateTime ,2,/mnt/unix//usr/share/pixmaps/redhat/rpm.tif,124955,-,Log2t::input::exif,-

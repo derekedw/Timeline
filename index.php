@@ -97,7 +97,7 @@ $tln = new TlnData($db);
 $input = file_get_contents('php://input');
 if ($input) {
 	$xmlDoc = new DOMDocument();
-	$xmlDoc->loadXML(@$input);
+	$xmlDoc->loadXML(utf8_decode(@$input));
 	$nodes = $xmlDoc->getElementsByTagName("Data");
 	if ($nodes->length > 0) {
 		set_time_limit(300);
