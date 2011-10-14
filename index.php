@@ -103,15 +103,8 @@ if ($input) {
 		set_time_limit(300);
 		$tln->import($nodes->item(0)->textContent);
 	}
-} else { ?>
-<html>
-<head>
-<link href="tln.css" type="text/css" rel="stylesheet">
-<script type="text/javascript" src="select.js" ></script>
-</head>
-<body>
-<img alt="Tapestry" src="tapestry.png">
-<?php 
+} else { 
+	include 'header.php';
 	include 'words.php';
 ?>
 	<div id="report">
@@ -170,10 +163,11 @@ if ($input) {
 			} else {
 				print $tln->h1("No data");
 			}
-			print "</div></body></html>\n";
+			print "</div>\n";
 		}
 	} else 
 		default_view($tln, $_GET);
+	include 'footer.php';
 }
 
 $db->close();

@@ -1,6 +1,10 @@
 <html>
+<head>
+<title>Tapestry Setup</title>
+</head>
 <body>
 <?php
+include 'header.php';
 require_once('tln-config.php');
 require_once('TlnData.php');
 require_once('Job.php');
@@ -18,7 +22,6 @@ if (Job::create($db)) {
 		print $tln->h1('Install unsuccessful');
 		$db->close();
 	}
-}				
+}
+include 'footer.php';				
 ?>
-</body>
-</html>
