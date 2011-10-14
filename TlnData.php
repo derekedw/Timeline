@@ -255,6 +255,19 @@ class TlnData {
 			return false;
 		}
 	}
+	function init_source($concurrency) {
+		$starttime = time();
+		$sql = 'insert into tln_source (
+				tln_concurrency_id,	source,	sourcetype,	type, host,	version, format, M,	A, C, B) values
+				(' . $concurrency . ', \'Real World\', \'Real World\', \'Real World\', \'-\', \'1\', \'Tapestry\', \'M\', \'A\', \'C\', \'B\')';
+		if (! $this->db->query($sql)) {
+			print $this->p('Error filling table: ' . $this->db->error . "<br />");
+			return false;
+		}
+		$endtime = time();
+		print $this->p($this->db->affected_rows . ' rows added to \'tln_source\' in ' . gmdate('H:i:s', $endtime - $starttime));
+		return true;
+	}
 	function create_db($job) {
 		if ($this->create_date()) {
 			if ($this->fill_date()) {
@@ -263,15 +276,17 @@ class TlnData {
 						if ($this->create_version()) {
 							if ($this->create_import()) {
 								if ($this->create_source()) {
-									if ($this->create_fact()) {
-										if ($this->create_import_word()) {
-											if ($this->create_word()) {
-												if ($this->create_fact_word()) {
-													if ($this->create_group()) {
-														if ($this->create_fact_group()) {
-															if ($this->fill_version()) { 
-																print $this->h1('All done in ' . gmdate("H:i:s", time() - $job->getId()));
-																return true;
+									if ($this->init_source($job->getId())) {
+										if ($this->create_fact()) {
+											if ($this->create_import_word()) {
+												if ($this->create_word()) {
+													if ($this->create_fact_word()) {
+														if ($this->create_group()) {
+															if ($this->create_fact_group()) {
+																if ($this->fill_version()) { 
+																	print $this->h1('All done in ' . gmdate("H:i:s", time() - $job->getId()));
+																	return true;
+																}
 															}
 														}
 													}
