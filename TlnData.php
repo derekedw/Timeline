@@ -218,6 +218,25 @@ class TlnData {
 			return false;
 		}
 	}
+	function create_group() {
+		$starttime = time();
+		$sql = 'CREATE TABLE tln_group (
+			tln_group_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+	    	name VARCHAR(25) NOT NULL,
+	    	description VARCHAR(255),
+	    	color VARCHAR(7) NOT NULL,
+			UNIQUE KEY tln_group_uniq(name),
+	    	PRIMARY KEY (tln_group_id)		
+		)';
+		if ($this->db->query($sql) == TRUE) {
+			$endtime = time();
+			print $this->h1('Created \'tln_group\' table in ' . gmdate('H:i:s', $endtime - $starttime));
+			return true;
+		} else {
+			print $this->h1('Error creating \'tln_group\' table: ' . $this->db->error . "<br />");
+			return false;
+		}
+	}
     function create_fact_word() {
 		$starttime = time();
 		$sql = 'CREATE TABLE tln_fact_word (
@@ -233,6 +252,57 @@ class TlnData {
 			return true;
 		} else {
 			print $this->h1('Error creating \'tln_fact_word\' table: ' . $this->db->error . "<br />");
+			return false;
+		}
+	}
+	function create_db($job) {
+		if ($this->create_date()) {
+			if ($this->fill_date()) {
+				if ($this->create_time()) {
+					if ($this->fill_time()) {
+						if ($this->create_version()) {
+							if ($this->create_import()) {
+								if ($this->create_source()) {
+									if ($this->create_fact()) {
+										if ($this->create_import_word()) {
+											if ($this->create_word()) {
+												if ($this->create_fact_word()) {
+													if ($this->create_group()) {
+														if ($this->create_fact_group()) {
+															if ($this->fill_version()) { 
+																print $this->h1('All done in ' . gmdate("H:i:s", time() - $job->getId()));
+																return true;
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		return false;
+	}
+	function create_fact_group() {
+		$starttime = time();
+		$sql = 'CREATE TABLE tln_fact_group (
+			tln_group_id BIGINT UNSIGNED NOT NULL,
+			tln_fact_id BIGINT UNSIGNED NOT NULL,
+	    	PRIMARY KEY (tln_group_id, tln_fact_id),		
+			FOREIGN KEY (tln_fact_id) REFERENCES tln_fact(tln_fact_id),
+			FOREIGN KEY (tln_group_id) REFERENCES tln_group(tln_group_id)
+		)';
+		if ($this->db->query($sql) == TRUE) {
+			$endtime = time();
+			print $this->h1('Created \'tln_fact_group\' table in ' . gmdate('H:i:s', $endtime - $starttime));
+			return true;
+		} else {
+			print $this->h1('Error creating \'tln_fact_group\' table: ' . $this->db->error . "<br />");
 			return false;
 		}
 	}

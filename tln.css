@@ -142,4 +142,40 @@ background-color: #E6E0FF;
 
 ul li:hover ul { 
 display: block;
-} 
+}
+.group00 {
+background-color: #FFCCCC;
+}
+.group01 {
+background-color: #FFE5CC;
+}
+.group02 {
+background-color: #FFFFCC;
+}
+.group03 {
+background-color: #E5FFCC;
+}
+.group04 {
+background-color: #CCFFCC;
+}
+.group05 {
+background-color: #CCFFE5;
+}
+.group06 {
+background-color: #CCFFFF;
+}
+.group07 {
+background-color: #CCE5FF;
+}
+.group08 {
+background-color: #CCCCFF;
+}
+.group09 {
+background-color: #E5CCFF;
+}
+.group10 {
+background-color: #FFCCFF;
+}
+.group11 {
+background-color: #FFCCE5;
+}
