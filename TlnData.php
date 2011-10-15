@@ -647,15 +647,15 @@ class TlnData {
 		$sql = 'select sum(count) as count, 
 					d.date, t.tick, s.source, s.sourcetype, 
 					s.m, s.a, s.c, s.b,	f.user, s.host, f.short, f.description, 
-					f.filename, f.inode, f.notes, f.extra, s.type, s.version, s.format
+					f.filename, f.inode, f.notes, f.extra, s.type, s.version, s.format, f.tln_fact_id
     			from tln_date d inner join (
     				tln_time t inner join (
     					tln_source s inner join ' . $word_join . ' on s.tln_source_id = f.tln_source_id
     				) on t.tln_time_id = f.tln_time_id
     			) on d.tln_date_id = f.tln_date_id
     			' . $this->get_where($params) . '
-    			group by d.date, t.tick, s.sourcetype, f.description, f.filename, f.inode
-    			order by d.date ' . $order . ', t.tick ' . $order . ', s.sourcetype, f.description, f.filename, f.inode
+    			group by f.tln_fact_id
+    			order by d.date ' . $order . ', t.tick ' . $order . ', f.tln_fact_id
     			limit 1000';
 		$result = array();
 		if ($stmt = $this->db->prepare($sql)) {
@@ -665,14 +665,14 @@ class TlnData {
 			$stmt->bind_result($count, 
 					$date, $tick, $source, $sourcetype, $m, $a, $c, $b, 
 					$user, $host, $short, $description, $filename,
-					$inode, $notes, $extra, $type, $version, $format);
+					$inode, $notes, $extra, $type, $version, $format, $tln_fact_id);
 			$macb = array();
 			$keys = array();
 			while ($stmt->fetch()) {
 				$this->columns($macb, $m, $a, $c, $b, $count, $params);  
 				$result[] = array($macb, array($count, $date, $tick), array($source, $sourcetype, $type,
 					$user, $host, $short, $description, $version, $filename,
-					$inode, $notes, $format, $extra));
+					$inode, $notes, $format, $extra), $tln_fact_id);
 			}
 			$stmt->free_result();
 		}
@@ -892,22 +892,10 @@ class TlnData {
 	}
 	function get_macb($macb) {
 		$result = '';
-		if (array_key_exists('M', $macb))
-			$result .= $macb['M'][0];
-		else 
-			$result .= '.';
-		if (array_key_exists('A', $macb))
-			$result .= $macb['A'][0];
-		else 
-			$result .= '.';
-		if (array_key_exists('C', $macb)) 
-			$result .= $macb['C'][0];
-		else 
-			$result .= '.';
-		if (array_key_exists('B', $macb)) 
-			$result .= $macb['B'][0];
-		else 
-			$result .= '.';
+		$result .= $macb[0][0];
+		$result .= $macb[1][0];
+		$result .= $macb[2][0];
+		$result .= $macb[3][0];
 		return $result;
 	} 
 	function get_proportional() {

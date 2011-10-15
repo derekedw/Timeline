@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
   <project name="Timeline" default="install">
-     <target name="install" depends="copyJavascript">
+     <target name="install" depends="copyJavascript,copyImg">
         <echo>Copying PHP scripts to server</echo>
         <copy todir="${timeline.docroot}">
         	<fileset dir=".">
-        		<include name="*.png" />
         		<include name="*.php" />
         		<include name="*.css" />
         	</fileset>
@@ -15,6 +14,15 @@
   	 	<copy todir="${timeline.docroot}">
         	<fileset dir=".">
         		<include name="*.js" />
+        	</fileset>
+  	 	</copy>
+  	 </target>
+  	 <target name="copyImg">
+        <echo>Copying images to server</echo>
+  	 	<copy todir="${timeline.docroot}">
+        	<fileset dir=".">
+        		<include name="*.png" />
+        		<include name="*.gif" />
         	</fileset>
   	 	</copy>
   	 </target>

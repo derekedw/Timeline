@@ -4,6 +4,7 @@ body {
 background-color:#7F7D40;
 font-family:Verdana, Arial, sans-serif;
 font-size:small;
+color:white;
 }
 tr td {
 background-color: #E6E0FF;
@@ -87,6 +88,23 @@ border-bottom: 3px solid #333;
 top:75px;
 clear:both;
 }
+#groupform {
+	margin:20px;
+	padding: 20px;
+	background-color:white;
+	color:black;
+	border:3px solid black;
+	width: 490px;
+}
+#groupinput {
+	float:left;
+	padding: 20px;	
+}
+#colorchooser {
+	float:left;
+	width: 110px;
+	padding: 20px;
+}
 table {
 font-family:monospace;
 font-size:medium;
@@ -102,9 +120,10 @@ margin:0;
 #wordSelector {
 position:absolute;
 top:0px;
-left:1024px;
-width:400px;
+right:0px;
 z-index:1;
+text-align:right;
+padding:20px;
 }
 #srcSelector {
 float:left;
@@ -143,34 +162,34 @@ background-color: #E6E0FF;
 ul li:hover ul { 
 display: block;
 }
-.group00 {
+.group0 {
 background-color: #FFCCCC;
 }
-.group01 {
+.group1 {
 background-color: #FFE5CC;
 }
-.group02 {
+.group2 {
 background-color: #FFFFCC;
 }
-.group03 {
+.group3 {
 background-color: #E5FFCC;
 }
-.group04 {
+.group4 {
 background-color: #CCFFCC;
 }
-.group05 {
+.group5 {
 background-color: #CCFFE5;
 }
-.group06 {
+.group6 {
 background-color: #CCFFFF;
 }
-.group07 {
+.group7 {
 background-color: #CCE5FF;
 }
-.group08 {
+.group8 {
 background-color: #CCCCFF;
 }
-.group09 {
+.group9 {
 background-color: #E5CCFF;
 }
 .group10 {

@@ -103,7 +103,7 @@ function detail_view($tln, $params) {
 					$user, $host, $short, $description, $version, $filename,
 					$inode, $notes, $format, $extra */
 			$macb = $row[0];
-			print '<tr class="d' . $i%2 . '" onclick="selectRecord(this);"><td>' . implode('</td><td>', $row[1]) . "</td>\n";
+			print '<tr class="d' . $i%2 . '" onclick="selectRecord(this,' . $row[3] . ');"><td>' . implode('</td><td>', $row[1]) . "</td>\n";
 			print '<td>' . $tln->get_macb($macb) . '</td>';
 			print '<td>' . implode('</td><td>', $row[2]) . "</td></tr>\n";		
 			$i++;		
