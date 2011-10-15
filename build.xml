@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
   <project name="Timeline" default="install">
-     <target name="install" depends="copyJavascript,copyImg">
+     <target name="install" depends="copyJavascript,copyImg,copyDate-chooser">
         <echo>Copying PHP scripts to server</echo>
         <copy todir="${timeline.docroot}">
         	<fileset dir=".">
@@ -24,6 +24,12 @@
         		<include name="*.png" />
         		<include name="*.gif" />
         	</fileset>
+  	 	</copy>
+  	 </target>
+  	 <target name="copyDate-chooser">
+  	 	<echo>Copying date-chooser code to the server</echo>
+  	 	<copy todir="${timeline.docroot}/date-chooser">
+  	 		<fileset dir="date-chooser" excludes="*.html" /> 
   	 	</copy>
   	 </target>
   </project>

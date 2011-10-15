@@ -1,8 +1,3 @@
-<html>
-<head>
-<link href="tln.css" type="text/css" rel="stylesheet">
-</head>
-<body>
 <div id="wordSelector">
 <form action="index.php">
 	<ul><li><input type="text" name="search"></input>
@@ -55,5 +50,4 @@ if (array_key_exists('search', $_GET)) {
 ?>
 </li></ul>
 </form>
-</div><!-- end srcSelector -->
-</body></html>
+</div>

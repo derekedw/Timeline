@@ -4,7 +4,7 @@ function summary_view($tln, $params) {
 	$run_once = false;
 	if (count($result = $tln->get_view($params)) <= 0)
 		return false;
-	print "<table><tbody> 
+	print "<div id=\"contentArea\"><div id=\"report\"><table><tbody> 
 		<thead>
 	    <tr>
 	      <th>Date Time</th>
@@ -55,19 +55,19 @@ function summary_view($tln, $params) {
 		$my_params['go'] = 'backward';
 		$my_params['date'] = $daterow[0][0];
 		$my_params['time'] = $daterow[0][1];
-		print '<tr><td colspan="10"><a href="' . $tln->h2q($my_params) . '" >continue</a> ';
+		print '<tr><td colspan="11"><a href="' . $tln->h2q($my_params) . '" >continue</a> ';
 		print "</tbody></table>\n";
 	} else {
 		print $tln->h1("No data");
 	}
-	print "</div></body></html>\n";
+	print "</div></div>\n";
 }
 
 function detail_view($tln, $params) {
 	$result = $tln->get_detail_view($_GET);
 	$run_once = false;
-	if (count($result) > 0) { 
-		print "<table><thead>
+	if (count($result) > 0) {
+		print "<div id=\"report\"><table><thead>
     <tr>
       <th>Count</th>
       <th>Date</th>
@@ -118,6 +118,15 @@ function detail_view($tln, $params) {
 	}
 	print "</div>\n";
 }
+
+function canvas_start() {
+	print "<div id=\"canvas\">\n";
+}
+
+function canvas_end() {
+	print "</div>\n";
+}
+
 require_once('tln-config.php');
 require_once('TlnData.php');
 
@@ -139,15 +148,15 @@ if ($input) { # If information was posted, we are importing data. Output is in p
 } else { # If information was NOT posted, output is in HTML.
 	include 'header.php';
 	include 'words.php';
-?>
-	<div id="report">
-<?php 
+	canvas_start();
+
 	if (array_key_exists('view', $_GET)) {
 		if ($_GET['view'] == 'detail') {
 			detail_view($tln, $_GET);
 		}
 	} else 
 		summary_view($tln, $_GET);
+	canvas_end();
 	include 'footer.php';
 }
 

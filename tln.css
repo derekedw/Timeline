@@ -1,9 +1,9 @@
 @CHARSET "ISO-8859-1";
 
+@media print{@page {size: landscape}}
 body {
 background-color:#7F7D40;
 font-family:Verdana, Arial, sans-serif;
-font-size:small;
 color:white;
 }
 tr td {
@@ -48,62 +48,48 @@ border-left:2px solid gray;
 border-bottom:2px solid #eeeeee;
 border-right:2px solid #eeeeee;
 padding: 0px;
-}
+4}
 th {
 color:white;
 }
-#protocol {
-background-color:#c099c0;
-margin:auto;
-padding:5px 15px 5px 15px;
-width:750px;
-height:18px;
+#canvas {
+position:absolute;
+top:75px;
+right: 0px;
+left: 0px;
 }
 #contentArea {
-background-color:#ffffff;
-margin:auto;
-border:thin solid #c099c0;
 padding:5px 10px;
-width:750px;
-}
-#statusDiv {
-background-color:#eeeec0;
-margin:5px 5px 5px 0px;
-padding:5px 5px 5px 5px;
-width:210px;
-height:25px;
-font-size:x-small;
-}
-#resultsDiv {
-background-color:#eeeec0;
-margin:5px 5px 5px 0px;
-padding:5px 5px 5px 5px;
-font-size:x-small;
-height:85px;
-}
-#report {
-position:absolute;
+width:1050px;
+margin:auto;
 border-right: 3px solid #333;
 border-bottom: 3px solid #333;
+}
+#report {
 top:75px;
 clear:both;
 }
 #groupform {
-	margin:20px;
+	margin:auto;
 	padding: 20px;
 	background-color:white;
 	color:black;
 	border:3px solid black;
-	width: 490px;
+	width: 530px;
 }
 #groupinput {
 	float:left;
-	padding: 20px;	
+	padding: 20px 30px;	
 }
 #colorchooser {
 	float:left;
 	width: 110px;
-	padding: 20px;
+	padding: 20px 30px;
+}
+#buttons {
+	clear: both; 
+	text-align:right;
+	padding: 20px 30px;
 }
 table {
 font-family:monospace;
