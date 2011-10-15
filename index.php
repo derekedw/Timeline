@@ -9,6 +9,7 @@ function summary_view($tln, $params) {
 	    <tr>
 	      <th>Date Time</th>
 	      <th>Host</th>
+	      <th>Log Source Type</th>
 	      <th>Log Source</th>
 	      <th>L2T Format</th>
 	      <th>L2T Version</th>
@@ -28,7 +29,7 @@ function summary_view($tln, $params) {
 				$my_params['go'] = 'forward';
 				$my_params['date'] = $daterow[0][0];
 				$my_params['time'] = $daterow[0][1];
-				print '<tr><td colspan="10"><a href="' . $tln->h2q($my_params) . '" >continue</a></tr>';
+				print '<tr><td colspan="11"><a href="' . $tln->h2q($my_params) . '" >continue</a></tr>';
 				$run_once = true;
 			}
 			print '<tr class="d' . $i%2 . '"><td rowspan="' . count($daterow[1]) . '" >' . $daterow[0][0] . ' ' . $daterow[0][1] .
@@ -39,35 +40,12 @@ function summary_view($tln, $params) {
 			foreach ($daterow[1] as $sourcerow) {
 				if (!$firstrow)
 					print '<tr class="d' . $i%2 . '">';
-				print '<td>' . $sourcerow[5] . '</td>';
-				print '<td><a href="' . $tln->h2q($sourcerow[2]) . '" >' . $sourcerow[0] . '</a></td>';
-				print '<td>' . $sourcerow[4] . '</td>';
-				print '<td>' . $sourcerow[3] . '</td>';
-				if (array_key_exists('M', $sourcerow[1])) {
-					print '<td style="text-align:right;"><a href="' . $tln->h2q($sourcerow[1]['M'][1]) . '" >' . $sourcerow[1]['M'][0] . '</a></td>';
-				} else {
-					print '<td style="text-align:right;">0</td>';
+				foreach ($sourcerow[1] as $column) {
+					print '<td><a href="' . $tln->h2q($column[1]) . '" >' . $column[0] . '</a></td>';
 				}
-				if (array_key_exists('A', $sourcerow[1])) {
-					print '<td style="text-align:right;"><a href="' . $tln->h2q($sourcerow[1]['A'][1]) . '" >' . $sourcerow[1]['A'][0] . '</a></td>';
-				} else {
-					print '<td style="text-align:right;">0</td>';
-				}
-				if (array_key_exists('C', $sourcerow[1])) {
-					print '<td style="text-align:right;"><a href="' . $tln->h2q($sourcerow[1]['C'][1]) . '" >' . $sourcerow[1]['C'][0] . '</a></td>';
-				} else {
-					print '<td style="text-align:right;">0</td>';
-				}
-				if (array_key_exists('B', $sourcerow[1])) {
-					print '<td style="text-align:right;"><a href="' . $tln->h2q($sourcerow[1]['B'][1]) . '" >' . $sourcerow[1]['B'][0] . '</a></td>';
-				} else {
-					print '<td style="text-align:right;">0</td>';
-				}
-				if (array_key_exists('total', $sourcerow[1])) {
-					print '<td style="text-align:right;"><a href="' . $tln->h2q($sourcerow[1]['total'][1]) . '" >' . $sourcerow[1]['total'][0] . '</a></td>';
-				} else {
-					print '<td style="text-align:right;">0</td>';
-				}
+				foreach ($sourcerow[0] as $column) {
+					print '<td style="text-align:right;"><a href="' . $tln->h2q($column[1]) . '" >' . $column[0] . '</a></td>';
+				} 
 				print "</tr>\n";
 				$firstrow=false;
 			}

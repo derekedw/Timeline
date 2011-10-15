@@ -735,9 +735,20 @@ class TlnData {
 				return false;
 			$result[] = $timefield . $op . '\'' . $params['time'] . $fudge . '\'';
 		}
+		if (array_key_exists('host', $params)) {
+			$result[] = 's.host=\'' . $this->db->real_escape_string($params['host']) . '\'';
+		}
 		if (array_key_exists('source', $params)) {
-			/* TODO set validation for this parameter */
-			$result[] = 's.sourcetype=\'' . $params['source'] . '\'';
+			$result[] = 's.source=\'' . $this->db->real_escape_string($params['source']) . '\'';
+		}
+		if (array_key_exists('sourcetype', $params)) {
+			$result[] = 's.sourcetype=\'' . $this->db->real_escape_string($params['sourcetype']) . '\'';
+		}
+		if (array_key_exists('format', $params)) {
+			$result[] = 's.formate=\'' . $this->db->real_escape_string($params['format']) . '\'';
+		}
+		if (array_key_exists('version', $params)) {
+			$result[] = 's.version=\'' . $this->db->real_escape_string($params['version']) . '\'';
 		}
 		if (array_key_exists('macb', $params)) {
 			switch ($params['macb']) {
@@ -772,21 +783,21 @@ class TlnData {
 			$order = 'desc';
 		$datefield = $this->datezoom[$this->datezoom_level]['datefield'];
 		$timefield = $this->datezoom[$this->datezoom_level]['timefield'];;
-		$sql = 'select ' . $datefield . ', ' . $timefield . ', s.sourcetype, count(s.M), count(s.A), count(s.C), count(s.B), sum(f.count) as items, s.version, s.format, s.host
+		$sql = 'select ' . $datefield . ', ' . $timefield . ', s.source, s.sourcetype, count(s.M), count(s.A), count(s.C), count(s.B), sum(f.count) as items, s.version, s.format, s.host
     			from tln_date d inner join (
     				tln_time t inner join (
     					tln_source s inner join tln_fact f on s.tln_source_id = f.tln_source_id
     				) on t.tln_time_id = f.tln_time_id
     			) on d.tln_date_id = f.tln_date_id 
     			' . $this->get_where($params) . '
-    			group by ' . $datefield . ', ' . $timefield . ', s.sourcetype, s.version, s.format, s.host
-    			order by ' . $datefield . ' ' . $order . ', ' . $timefield . ' ' . $order . ', s.sourcetype, s.version, s.format, s.host';
+    			group by ' . $datefield . ', ' . $timefield . ', s.source, s.sourcetype, s.version, s.format, s.host
+    			order by ' . $datefield . ' ' . $order . ', ' . $timefield . ' ' . $order . ', s.sourcetype, s.sourcetype, s.version, s.format, s.host';
 		$result = array();
 		if ($stmt = $this->db->prepare($sql)) {
 			$stmt->execute();
 			$stmt->store_result();
 			$this->set_row_count($stmt->num_rows);
-			$stmt->bind_result($year, $month, $source, $m, $a, $c, $b, $items, $version, $format, $host);
+			$stmt->bind_result($year, $month, $source, $sourcetype, $m, $a, $c, $b, $items, $version, $format, $host);
 			$columns = array();
 			$sourcerows = array();
 			$params['datezoom'] = $this->datezoom_level;
@@ -795,40 +806,35 @@ class TlnData {
 				if (( ! isset($oldyear)) || $year == $oldyear) {
 					$params['date'] = $year;
 					if (( ! isset($oldmonth)) || $month == $oldmonth) {
-						$params['source'] = $source;
 						$params['time'] = $month;
+						$columns = array();
 						$this->columns($columns, $m, $a, $c, $b, $items, $params);
-						$sourcerows[] = $this->sourcerows($columns, $source, $version, $format, $host, $params);
+						$sourcerows[] = $this->sourcerows($columns, $source, $sourcetype, $version, $format, $host, $params);
 						$oldmonth = $month;
 					} else {
-						unset($params['source']);
 						$result[] = $this->daterows($sourcerows, $year, $oldmonth, $params);
 						$columns = array();
 						$sourcerows = array();
-						$params['source'] = $source;
 						$params['time'] = $month;
 						$this->columns($columns, $m, $a, $c, $b, $items, $params);
-						$sourcerows[] = $this->sourcerows($columns, $source, $version, $format, $host, $params);
+						$sourcerows[] = $this->sourcerows($columns, $source, $sourcetype, $version, $format, $host, $params);
 						$oldmonth = $month;
 						$datetime_count++;
 					}
 					$oldyear = $year;
 				} else {
-					unset($params['source']);
 					$result[] = $this->daterows($sourcerows, $oldyear, $oldmonth, $params);
 					$columns = array();
 					$sourcerows = array();
-					$params['source'] = $source;
 					$params['time'] = $month;
 					$params['date'] = $year;
 					$this->columns($columns, $m, $a, $c, $b, $items, $params);
-					$sourcerows[] = $this->sourcerows($columns, $source, $version, $format, $host, $params);
+					$sourcerows[] = $this->sourcerows($columns, $source, $sourcetype, $version, $format, $host, $params);
 					$oldmonth = $month;
 					$oldyear = $year;
 					$datetime_count++;
 				}
 			}
-			unset($params['source']);
 			$result[] = $this->daterows($sourcerows, $oldyear, $oldmonth, $params);		
 			$stmt->free_result();
 		} else {
@@ -849,22 +855,39 @@ class TlnData {
 		$details['view'] = 'detail';	
 		return array(array($year,$month), $rows, array($params, $zoom_in, $zoom_out, $details));
 	}
-	private function sourcerows (&$columns, $source, $oldversion, $oldformat, $oldhost, $params) { 
-		return array($source, $columns, $params, $oldversion, $oldformat, $oldhost);
+	private function sourcerows (&$columns, $source, $sourcetype, $version, $format, $host, $params) {
+		$myparams = $params;
+		$result = array();
+		$myparams['host'] = $host;
+		$result[] = array($host, $myparams);
+		$myparams = $params;
+		$myparams['source'] = $source;
+		$result[] = array($source, $myparams);
+		$myparams = $params;
+		$myparams['sourcetype'] = $sourcetype;
+		$result[] = array($sourcetype, $myparams);
+		$myparams = $params;
+		$myparams['format'] = $format;
+		$result[] = array($format, $myparams);
+		$myparams = $params;
+		$myparams['version'] = $version;
+		$result[] = array($version, $myparams);
+		$myparams = $params; 
+		return array($columns,$result);
 	}
 	private function columns(&$columns, $m, $a, $c, $b, $items, $params) {
 		$myparams = $params; 
 		$myparams['view'] = 'detail';
 		$myparams['macb'] = 'M';
-		$columns['M'] = array($m, $myparams);
+		$columns[] = array($m, $myparams);
 		$myparams['macb'] = 'A';
-		$columns['A'] = array($a, $myparams);
+		$columns[] = array($a, $myparams);
 		$myparams['macb'] = 'C';
-		$columns['C'] = array($c, $myparams);
+		$columns[] = array($c, $myparams);
 		$myparams['macb'] = 'B';
-		$columns['B'] = array($b, $myparams);
+		$columns[] = array($b, $myparams);
 		unset($myparams['macb']);
-		$columns['total'] = array($items, $myparams);
+		$columns[] = array($items, $myparams);
 		return $columns;
 	}
 	function get_macb($macb) {
