@@ -29,22 +29,22 @@ function summary_view($tln, $params) {
 				$my_params['go'] = 'forward';
 				$my_params['date'] = $daterow[0][0];
 				$my_params['time'] = $daterow[0][1];
-				print '<tr><td colspan="11"><a href="' . $tln->h2q($my_params) . '" >continue</a></tr>';
+				print '<tr><td colspan="11"><a href="' . h2q($my_params) . '" >continue</a></tr>';
 				$run_once = true;
 			}
 			print '<tr class="d' . $i%2 . '"><td rowspan="' . count($daterow[1]) . '" >' . $daterow[0][0] . ' ' . $daterow[0][1] .
-				' <a href="' . $tln->h2q($daterow[2][1]) . '" >[+]</a> ' .
-				'<a href="' . $tln->h2q($daterow[2][2]) . '" >[-]</a> ' .
-				'<a href="' . $tln->h2q($daterow[2][3]) . '" >[details]</a></td>';
+				' <a href="' . h2q($daterow[2][1]) . '" >[+]</a> ' .
+				'<a href="' . h2q($daterow[2][2]) . '" >[-]</a> ' .
+				'<a href="' . h2q($daterow[2][3]) . '" >[details]</a></td>';
 			$firstrow=true;
 			foreach ($daterow[1] as $sourcerow) {
 				if (!$firstrow)
 					print '<tr class="d' . $i%2 . '">';
 				foreach ($sourcerow[1] as $column) {
-					print '<td><a href="' . $tln->h2q($column[1]) . '" >' . $column[0] . '</a></td>';
+					print '<td><a href="' . h2q($column[1]) . '" >' . $column[0] . '</a></td>';
 				}
 				foreach ($sourcerow[0] as $column) {
-					print '<td style="text-align:right;"><a href="' . $tln->h2q($column[1]) . '" >' . $column[0] . '</a></td>';
+					print '<td style="text-align:right;"><a href="' . h2q($column[1]) . '" >' . $column[0] . '</a></td>';
 				} 
 				print "</tr>\n";
 				$firstrow=false;
@@ -55,7 +55,7 @@ function summary_view($tln, $params) {
 		$my_params['go'] = 'backward';
 		$my_params['date'] = $daterow[0][0];
 		$my_params['time'] = $daterow[0][1];
-		print '<tr><td colspan="11"><a href="' . $tln->h2q($my_params) . '" >continue</a> ';
+		print '<tr><td colspan="11"><a href="' . h2q($my_params) . '" >continue</a> ';
 		print "</tbody></table>\n";
 	} else {
 		print $tln->h1("No data");
@@ -64,7 +64,7 @@ function summary_view($tln, $params) {
 }
 
 function detail_view($tln, $params) {
-	$result = $tln->get_detail_view($_GET);
+	$result = $tln->get_detail_view($params);
 	$run_once = false;
 	if (count($result) > 0) {
 		print "<div id=\"report\"><table><thead>
@@ -92,18 +92,21 @@ function detail_view($tln, $params) {
 		foreach ($result as $row) {
 			if ( ! $run_once) {
 				print "<tbody>\n";
-				$my_params=$_GET;
+				$my_params=$params;
 				$my_params['go'] = 'forward';
 				$my_params['date'] = $row[1][1];
 				$my_params['time'] = $row[1][2];
-				print '<tr><td colspan="17"><a href="' . $tln->h2q($my_params) . '" >continue</a> ';
+				print '<tr><td colspan="17"><a href="' . h2q($my_params) . '" >continue</a>';
+				print '						<a href="javascript:addSelected(\'' . h2q($params) . '\');">add to a group</a>';
 				$run_once = true;
 			}
-			/* $macb, $count, gmdate("%m/%d/%Y", strtotime($oldkeys[6])), $oldkeys[7], $source, $sourcetype,
-					$user, $host, $short, $description, $version, $filename,
-					$inode, $notes, $format, $extra */
 			$macb = $row[0];
-			print '<tr class="d' . $i%2 . '" onclick="selectRecord(this,' . $row[3] . ');"><td>' . implode('</td><td>', $row[1]) . "</td>\n";
+			print '<tr class="';
+			if ($row[4] != null)
+				print 'group' . $row[4];
+			else 
+				print 'd' . $i%2;
+			print '" onclick="selectRecord(this,' . $row[3] . ',false);"><td>' . implode('</td><td>', $row[1]) . "</td>\n";
 			print '<td>' . $tln->get_macb($macb) . '</td>';
 			print '<td>' . implode('</td><td>', $row[2]) . "</td></tr>\n";		
 			$i++;		
@@ -111,7 +114,11 @@ function detail_view($tln, $params) {
 		$my_params['go'] = 'backward';
 		$my_params['date'] = $row[1][1];
 		$my_params['time'] = $row[1][2];
-		print '<tr><td colspan="17"><a href="' . $tln->h2q($my_params) . '" >continue</a> ';
+		print '<tr><td colspan="17"><a href="' . h2q($my_params) . '" >continue</a>';
+		unset($my_params['go']);
+		unset($my_params['date']);
+		unset($my_params['time']);
+		print '						<a href="javascript:addSelected(\'' . h2q($params) . '\');">add to a group</a>';
 		print "</tbody></table>\n";
 	} else {
 		print $tln->h1("No data");
@@ -152,6 +159,11 @@ if ($input) { # If information was posted, we are importing data. Output is in p
 
 	if (array_key_exists('view', $_GET)) {
 		if ($_GET['view'] == 'detail') {
+			detail_view($tln, $_GET);
+		}
+	} else if (array_key_exists('entries', $_GET)) {
+		if (validate_list($_GET['entries']) && validate_int($_GET['color'], 0, 11)) {
+			$tln->add_group($_GET['name'], $_GET['description'], $_GET['color'], $_GET['entries']);
 			detail_view($tln, $_GET);
 		}
 	} else 

@@ -26,7 +26,7 @@ class TlnData {
 	function set_row_count($n) {
 		$this->row_count = $n;
 	}
-	function create_import() {
+	private function create_import() {
 		$starttime = time();
 		$sql = 'CREATE TABLE tln_import (
 			tln_import_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,	
@@ -63,7 +63,7 @@ class TlnData {
 		}
 	}
 	
-	function create_date() {
+	private function create_date() {
 		$starttime = time();
 		$sql = 'CREATE TABLE tln_date (
 					tln_date_id BIGINT UNSIGNED DEFAULT 0 NOT NULL,
@@ -86,7 +86,7 @@ class TlnData {
 	function h1($text) {
 		return '<h1>' . $text . '</h1>';
 	}
-	function create_time() {
+	private function create_time() {
 		$starttime = time();
 		$sql = 'CREATE TABLE tln_time (
 					tln_time_id BIGINT UNSIGNED DEFAULT 0 NOT NULL,
@@ -107,7 +107,7 @@ class TlnData {
 		}
 		return true;
 	}
-	function create_version() {
+	private function create_version() {
 		$starttime = time();
 		$sql = 'CREATE TABLE tln_version (
 			version TINYINT UNSIGNED DEFAULT 1 NOT NULL,
@@ -124,7 +124,7 @@ class TlnData {
 		}
 	}
 	
-	function create_source() {
+	private function create_source() {
 		$starttime = time();
 		$sql = 'CREATE TABLE tln_source (
 			tln_source_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -151,7 +151,7 @@ class TlnData {
 			return false;
 		}
 	}
-	function create_fact() {
+	private function create_fact() {
 		$starttime = time();
 		$sql = 'CREATE TABLE tln_fact (
 			tln_fact_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -167,6 +167,7 @@ class TlnData {
 			inode VARCHAR(25) NOT NULL,
 			notes VARCHAR(255) NOT NULL,
 			extra  VARCHAR(255) NOT NULL,
+			color INT NULL,
 			PRIMARY KEY (tln_fact_id),		
 			UNIQUE KEY tln_fact_uniq(tln_date_id, tln_time_id, tln_source_id, description(255), filename(255), inode),
 			FOREIGN KEY (tln_date_id) REFERENCES tln_date(tln_date_id),
@@ -182,7 +183,7 @@ class TlnData {
 			return false;
 		}
 	}
-    function create_import_word() {
+    private function create_import_word() {
 		$starttime = time();
 		$sql = 'CREATE TABLE tln_import_word (
 			tln_import_word_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -201,7 +202,7 @@ class TlnData {
 			return false;
 		}
 	}
-	function create_word() {
+	private function create_word() {
 		$starttime = time();
 		$sql = 'CREATE TABLE tln_word (
 			tln_word_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -218,13 +219,12 @@ class TlnData {
 			return false;
 		}
 	}
-	function create_group() {
+	private function create_group() {
 		$starttime = time();
 		$sql = 'CREATE TABLE tln_group (
 			tln_group_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 	    	name VARCHAR(25) NOT NULL,
 	    	description VARCHAR(255),
-	    	color VARCHAR(7) NOT NULL,
 			UNIQUE KEY tln_group_uniq(name),
 	    	PRIMARY KEY (tln_group_id)		
 		)';
@@ -237,7 +237,7 @@ class TlnData {
 			return false;
 		}
 	}
-    function create_fact_word() {
+    private function create_fact_word() {
 		$starttime = time();
 		$sql = 'CREATE TABLE tln_fact_word (
 			tln_word_id BIGINT UNSIGNED NOT NULL,
@@ -303,7 +303,7 @@ class TlnData {
 		}
 		return false;
 	}
-	function create_fact_group() {
+	private function create_fact_group() {
 		$starttime = time();
 		$sql = 'CREATE TABLE tln_fact_group (
 			tln_group_id BIGINT UNSIGNED NOT NULL,
@@ -321,7 +321,7 @@ class TlnData {
 			return false;
 		}
 	}
-	function fill_date() {
+	private function fill_date() {
 		$count = 0;
 		$rows = array();
 		$starttime = time();
@@ -355,7 +355,7 @@ class TlnData {
 	function p($text) {
 		return '<p>' . $text . '</p>';
 	}
-	function fill_time() {
+	private function fill_time() {
 		$count = 0;
 		$rows = array();
 		$starttime = time();
@@ -384,8 +384,45 @@ class TlnData {
 		print $this->p($count . ' rows added to \'tln_time\' in ' . gmdate('H:i:s', $endtime - $starttime));
 		return true;
 	}
-	
-	function fill_version() {
+	function add_group($name, $description, $color, $entries) {
+		if ($id = $this->fill_group($name, $description)) {
+			if ($this->fill_fact_group($id, $color, $entries)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	private function change_color($fid, $color) {
+		$sql = 'update tln_fact
+				set color = ' . $color . '
+				where tln_fact_id = ' . $fid; 
+		if ($this->db->query($sql)) {
+			return true;
+		}
+		return false;
+	}
+	private function fill_fact_group($gid, $color, $entries) {
+		$row = array(); 
+		foreach (split(',', $entries) as $fid) {
+			$row[] = '(' . $gid . ', ' . $fid . ')';
+			$this->change_color($fid, $color);
+		}
+		$sql = 'insert into tln_fact_group(tln_group_id, tln_fact_id) values '; 
+		if ($this->db->query($sql . implode(",\n", $row))) {
+			return true;
+		}
+		return false;
+	}
+	private function fill_group($name, $description) {
+		$sql = 'insert into tln_group(name, description) 
+				values(\'' . $this->db->real_escape_string($name) . '\', \'' . 
+						$this->db->real_escape_string($description) . '\')';
+		if ($this->db->query($sql)) {
+			return $this->db->insert_id;
+		}
+		return false;
+	}
+	private function fill_version() {
 		$starttime = time();
 		$sql = 'insert into tln_version (version) values(1)';
 		if (! $this->db->query($sql)) {
@@ -647,7 +684,7 @@ class TlnData {
 		$sql = 'select sum(count) as count, 
 					d.date, t.tick, s.source, s.sourcetype, 
 					s.m, s.a, s.c, s.b,	f.user, s.host, f.short, f.description, 
-					f.filename, f.inode, f.notes, f.extra, s.type, s.version, s.format, f.tln_fact_id
+					f.filename, f.inode, f.notes, f.extra, s.type, s.version, s.format, f.tln_fact_id, f.color
     			from tln_date d inner join (
     				tln_time t inner join (
     					tln_source s inner join ' . $word_join . ' on s.tln_source_id = f.tln_source_id
@@ -665,14 +702,14 @@ class TlnData {
 			$stmt->bind_result($count, 
 					$date, $tick, $source, $sourcetype, $m, $a, $c, $b, 
 					$user, $host, $short, $description, $filename,
-					$inode, $notes, $extra, $type, $version, $format, $tln_fact_id);
+					$inode, $notes, $extra, $type, $version, $format, $tln_fact_id, $color);
 			$macb = array();
 			$keys = array();
 			while ($stmt->fetch()) {
 				$this->columns($macb, $m, $a, $c, $b, $count, $params);  
 				$result[] = array($macb, array($count, $date, $tick), array($source, $sourcetype, $type,
 					$user, $host, $short, $description, $version, $filename,
-					$inode, $notes, $format, $extra), $tln_fact_id);
+					$inode, $notes, $format, $extra), $tln_fact_id, $color);
 			}
 			$stmt->free_result();
 		}
@@ -689,7 +726,9 @@ class TlnData {
 		$datefield = $this->datezoom[$this->datezoom_level]['datefield'];
 		$timefield = $this->datezoom[$this->datezoom_level]['timefield'];;
 		$result = array();
-		if (array_key_exists('view', $params) && $params['view'] == 'detail') { 
+		if ((array_key_exists('view', $params) && $params['view'] == 'detail') ||
+		    (array_key_exists('entries', $params))) 
+		{ 
 			if (array_key_exists('go', $params)) {
 				$datefield = 'd.day';
 				$timefield = 't.second';
@@ -898,6 +937,22 @@ class TlnData {
 		$result .= $macb[3][0];
 		return $result;
 	} 
+	function get_selection_properties($list) {
+		$starttime = time();
+		$sql = 'select min(addtime(d.date, t.tick)) as min,
+    				   max(addtime(d.date, t.tick)) as max,
+    				   count(f.tln_fact_id) as count
+    			from tln_date d inner join (
+    				tln_time t inner join tln_fact f on t.tln_time_id = f.tln_time_id
+    			) on d.tln_date_id = f.tln_date_id
+    			where f.tln_fact_id in (' . $list . ')';
+		if ($result = $this->db->query($sql)) {
+			if ($row = $result->fetch_assoc()) {
+				return $row;
+			} 
+		}
+		return false;
+	}
 	function get_proportional() {
 		$job = Job::get_new();
 		$starttime = time();
@@ -957,12 +1012,6 @@ class TlnData {
 		if (! preg_match('@^\d+/\d+/\d+,\d+:\d+:\d+,\w+,[M.][A.][C.][B.],[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]*,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+$@', $input, $match)) 
 			return false;
 		return true;
-	}
-	function h2q($my_params) {
-		foreach ($my_params as $k => $v) {
-				$query[] = $k . '=' . $v;
-		}
-		return '?' . implode('&', $query);		
 	}
 }
 ?>

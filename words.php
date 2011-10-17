@@ -36,7 +36,7 @@ function get_wordlist($db, $word) {
 		$stmt->bind_result($suggestion);
 		while ($stmt->fetch()) {
 			$my_params = array('view' => 'detail', 'word' => $suggestion);
-			$result .= '<li><a href="index.php' . $tln->h2q($my_params) . '">' . $suggestion . "</a></li>\n";	
+			$result .= '<li><a href="index.php' . h2q($my_params) . '">' . $suggestion . "</a></li>\n";	
 		}
 		$result .= '</ul>';
 		return $result;

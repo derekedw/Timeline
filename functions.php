@@ -48,4 +48,17 @@ function validate_dns($name) {
 	} else
 		return false;
 }
+function validate_list($list) {
+	foreach (split('/,/', $list) as $id) {
+		if (!validate_int($id))
+			return false;
+	}
+	return true;
+}
+function h2q($my_params) {
+	foreach ($my_params as $k => $v) {
+			$query[] = $k . '=' . $v;
+	}
+	return '?' . implode('&', $query);		
+}
 ?>
