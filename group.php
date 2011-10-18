@@ -60,7 +60,7 @@ if ($disableDates) {
 <tbody>
 <?php
 for ($i = 0; $i < 12; $i++) {
-	print '<tr id="group' . $i . '" onclick="selectRecord(this,' . $i . ',true)"><td class="group' . $i . '"><img src="1x1.png" width="30" height="20"></td></tr>';	
+	print '<tr id="group' . $i . '"  class="group' . $i . '" onclick="selectRecord(this,' . $i . ',true)"><td><img src="1x1.png" width="30" height="20"></td></tr>';	
 }
 ?>
 </tbody>

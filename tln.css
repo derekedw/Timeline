@@ -7,7 +7,7 @@ font-family:Verdana, Arial, sans-serif;
 color:white;
 }
 tr td {
-background-color: #E6E0FF;
+background-color: #EFEBFF;
 color: black;
 padding: 2px;
 }
@@ -160,7 +160,7 @@ border-right: 3px solid #333;
 border-bottom: 3px solid #333;
 padding: 3px; 
 margin: 3px;
-background-color: #E6E0FF;
+background-color: #EFEBFF;
 } 
 
 ul li:hover ul { 

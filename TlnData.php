@@ -167,7 +167,6 @@ class TlnData {
 			inode VARCHAR(25) NOT NULL,
 			notes VARCHAR(255) NOT NULL,
 			extra  VARCHAR(255) NOT NULL,
-			color INT NULL,
 			PRIMARY KEY (tln_fact_id),		
 			UNIQUE KEY tln_fact_uniq(tln_date_id, tln_time_id, tln_source_id, description(255), filename(255), inode),
 			FOREIGN KEY (tln_date_id) REFERENCES tln_date(tln_date_id),
@@ -224,7 +223,8 @@ class TlnData {
 		$sql = 'CREATE TABLE tln_group (
 			tln_group_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 	    	name VARCHAR(25) NOT NULL,
-	    	description VARCHAR(255),
+	    	description VARCHAR(1024),
+	    	color INT NULL,
 			UNIQUE KEY tln_group_uniq(name),
 	    	PRIMARY KEY (tln_group_id)		
 		)';
@@ -385,27 +385,17 @@ class TlnData {
 		return true;
 	}
 	function add_group($name, $description, $color, $entries) {
-		if ($id = $this->fill_group($name, $description)) {
-			if ($this->fill_fact_group($id, $color, $entries)) {
+		if ($id = $this->fill_group($name, $description, $color)) {
+			if ($this->fill_fact_group($id, $entries)) {
 				return true;
 			}
 		}
 		return false;
 	}
-	private function change_color($fid, $color) {
-		$sql = 'update tln_fact
-				set color = ' . $color . '
-				where tln_fact_id = ' . $fid; 
-		if ($this->db->query($sql)) {
-			return true;
-		}
-		return false;
-	}
-	private function fill_fact_group($gid, $color, $entries) {
+	private function fill_fact_group($gid, $entries) {
 		$row = array(); 
 		foreach (split(',', $entries) as $fid) {
 			$row[] = '(' . $gid . ', ' . $fid . ')';
-			$this->change_color($fid, $color);
 		}
 		$sql = 'insert into tln_fact_group(tln_group_id, tln_fact_id) values '; 
 		if ($this->db->query($sql . implode(",\n", $row))) {
@@ -413,10 +403,11 @@ class TlnData {
 		}
 		return false;
 	}
-	private function fill_group($name, $description) {
-		$sql = 'insert into tln_group(name, description) 
+	private function fill_group($name, $description, $color) {
+		$sql = 'insert into tln_group(name, description, color) 
 				values(\'' . $this->db->real_escape_string($name) . '\', \'' . 
-						$this->db->real_escape_string($description) . '\')';
+						$this->db->real_escape_string($description) . '\', ' . 
+						$color . ')';
 		if ($this->db->query($sql)) {
 			return $this->db->insert_id;
 		}
@@ -684,12 +675,15 @@ class TlnData {
 		$sql = 'select sum(count) as count, 
 					d.date, t.tick, s.source, s.sourcetype, 
 					s.m, s.a, s.c, s.b,	f.user, s.host, f.short, f.description, 
-					f.filename, f.inode, f.notes, f.extra, s.type, s.version, s.format, f.tln_fact_id, f.color
-    			from tln_date d inner join (
-    				tln_time t inner join (
-    					tln_source s inner join ' . $word_join . ' on s.tln_source_id = f.tln_source_id
-    				) on t.tln_time_id = f.tln_time_id
-    			) on d.tln_date_id = f.tln_date_id
+					f.filename, f.inode, f.notes, f.extra, s.type, s.version, s.format, f.tln_fact_id, g.color
+    			from (tln_date d inner join (
+	    		        tln_time t inner join (
+	    				  tln_source s inner join ' . $word_join . ' on s.tln_source_id = f.tln_source_id
+	    				) on t.tln_time_id = f.tln_time_id
+		    	      ) on d.tln_date_id = f.tln_date_id
+		    	    ) left join (
+				  tln_fact_group fg inner join tln_group g on fg.tln_group_id = g.tln_group_id
+				) on f.tln_fact_id = fg.tln_fact_id
     			' . $this->get_where($params) . '
     			group by f.tln_fact_id
     			order by d.date ' . $order . ', t.tick ' . $order . ', f.tln_fact_id
@@ -705,9 +699,8 @@ class TlnData {
 					$inode, $notes, $extra, $type, $version, $format, $tln_fact_id, $color);
 			$macb = array();
 			$keys = array();
-			while ($stmt->fetch()) {
-				$this->columns($macb, $m, $a, $c, $b, $count, $params);  
-				$result[] = array($macb, array($count, $date, $tick), array($source, $sourcetype, $type,
+			while ($stmt->fetch()) {  
+				$result[] = array(array($m, $a, $c, $b), array($count, $date, $tick), array($source, $sourcetype, $type,
 					$user, $host, $short, $description, $version, $filename,
 					$inode, $notes, $format, $extra), $tln_fact_id, $color);
 			}
@@ -730,16 +723,14 @@ class TlnData {
 		    (array_key_exists('entries', $params))) 
 		{ 
 			if (array_key_exists('go', $params)) {
-				$datefield = 'd.day';
-				$timefield = 't.second';
+				$datefield = 'd.date';
+				$timefield = 't.tick';
 				if ($params['go'] == 'forward') {
 					$params['time'] = $params['time'];
 					$op = '>=';
-					$fudge = '';
 				} else {
 					$params['time'] = $params['time'];
 					$op = '<=';
-					$fudge = '';
 				}
 			} else {
 				$op = '='; 
@@ -931,10 +922,10 @@ class TlnData {
 	}
 	function get_macb($macb) {
 		$result = '';
-		$result .= $macb[0][0];
-		$result .= $macb[1][0];
-		$result .= $macb[2][0];
-		$result .= $macb[3][0];
+		$result .= $macb[0];
+		$result .= $macb[1];
+		$result .= $macb[2];
+		$result .= $macb[3];
 		return $result;
 	} 
 	function get_selection_properties($list) {
