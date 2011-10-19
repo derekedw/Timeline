@@ -11,24 +11,34 @@ if (mysqli_connect_errno()) {
 
 $dates = array();
 $disableDates = false;
+$tln = new TlnData($db);
 if (array_key_exists('selected', $_GET)) {
 	if (validate_list($_GET['selected'])) {
-		$tln = new TlnData($db);
 		$dates = $tln->get_selection_properties($_GET['selected']);
 		if ($dates['count'] > 0) {
 			$disableDates = true;
 		}
 	}
 } 
+
 ?>
 <form action="group.php">
 <div id="groupform">
 <div id="groupinput">
 <input type="hidden" id="entries" name="entries" value="<?php print $_GET['selected']; ?>">
 <p>Group name:</p>
-<input type="text" id="name" name="name" size="25" maxlength="25" ><br>
+<!-- <input type="text" id="name" name="name" size="25" maxlength="25" ><br>  -->
+<ul><li><input type="text" id="name" name="name" value="Please type or select a group name"><INPUT type="submit" value="search"></input>
+<ul> 
+<?php
+$groups = $tln->get_groups();
+while($group = $groups->fetch_assoc()) {
+	print '<li><a href="javascript:selectGroup(' . $group['id'] . ',\'' . $group['name'] . '\',\'' . $group['description'] . '\',' . $group['color'] . ')">' . $group['name'] . "</a></li>\n";
+} 
+?>
+</ul></ul>
 <p>Group description (optional):</p>
-<textarea rows="8" cols="32" id="description" name="description"></textarea><br>
+<textarea rows="16" cols="64" id="description" name="description"></textarea><br>
 <p>Start date:</p>
 <input id="startDate" name="startDate" size="20" maxlength="20" type="text" 
 <?php

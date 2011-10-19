@@ -658,6 +658,13 @@ class TlnData {
 		print $inserted . ' tln_import_word rows deleted in ' . gmdate('H:i:s', $endtime - $starttime) . "\n";
 		return true;
 	}
+	function get_groups() {
+		$sql = 'select tln_group_id as id, name, description, color from tln_group';
+		if ($result = $this->db->query($sql)) {
+			return $result;
+		}
+		return false;
+	}
 	function get_detail_view($params){
 		$starttime = time();
 		$order = 'DESC';

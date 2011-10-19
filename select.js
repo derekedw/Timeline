@@ -40,6 +40,13 @@ function removeElement(array,element) {
 	}
 }
 
+function selectGroup(id, name, description, color) {
+	document.getElementById('name').value = name;
+	document.getElementById('description').value = description;
+	var colorBlock = document.getElementById('group' + color);
+	selectRecord(colorBlock, color, true);
+}
+
 function saveGroup(disableDates,returnParams) {
 	var result="";
 	var i=0;
