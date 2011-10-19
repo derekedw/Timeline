@@ -713,38 +713,15 @@ class TlnData {
 		}
 		return $result;
 	}
-	private function get_where($params) {
-		if (array_key_exists('datezoom', $params)) 
+	private function get_datetime_where($params) {
+		if (array_key_exists('datezoom', $params)) { 
+			if (! validate_int($params['datezoom'], 0, count($this->datezoom)))
+				return false;
 			$this->datezoom_level = $params['datezoom'];
-		$datefield = $this->datezoom[$this->datezoom_level]['datefield'];
-		$timefield = $this->datezoom[$this->datezoom_level]['timefield'];;
-		$result = array();
-		if ((array_key_exists('view', $params) && $params['view'] == 'detail') ||
-		    (array_key_exists('entries', $params))) 
-		{ 
-			if (array_key_exists('go', $params)) {
-				$datefield = 'd.date';
-				$timefield = 't.tick';
-				if ($params['go'] == 'forward') {
-					$params['time'] = $params['time'];
-					$op = '>=';
-				} else {
-					$params['time'] = $params['time'];
-					$op = '<=';
-				}
-			} else {
-				$op = '='; 
-				$fudge = '';
-			}
-			if (array_key_exists('word', $params)) 
-				$result[] = 'word = \'' . $params['word'] . '\'';
-		} elseif (array_key_exists('go', $params) && $params['go'] == 'forward') { 
-			$op = '>=';
-			$fudge = '';
-		} else {
-			$op = '<=';
-			$fudge = '-99';
+			$datefield = $this->datezoom[$this->datezoom_level]['datefield'];
+			$timefield = $this->datezoom[$this->datezoom_level]['timefield'];
 		}
+		$result = array();
 		if (array_key_exists('date', $params)) {
 			$ymd = explode('-', $params['date']);
 			if (array_key_exists(0, $ymd) && ! validate_int($ymd[0], 1970, 2070))
@@ -753,18 +730,81 @@ class TlnData {
 				return false;			
 			if (array_key_exists(2, $ymd) && ! validate_int($ymd[2], 1, 31))
 				return false;
+			if (array_key_exists('time', $params) && $params['time'] != '.') {
+				$hms = explode('-', $params['time']);
+				if (array_key_exists(0, $hms) && ! validate_int($hms[0], 0, 23))
+					return false;
+				if (array_key_exists(1, $hms) && ! validate_int($hms[1], 0, 59))
+					return false;			
+				if (array_key_exists(2, $hms) && ! validate_int($hms[2], 0, 23))
+					return false;
+				if ((array_key_exists('view', $params) && $params['view'] == 'detail') ||
+				    (array_key_exists('entries', $params))) 
+				{ 
+					if (array_key_exists('go', $params)) {
+						$datefield = 'd.date';
+						$timefield = 't.tick';
+						if ($params['go'] == 'forward') {
+							$params['time'] = $params['time'];
+							$op = '>';
+							$fudge = '';
+						} elseif ($params['go'] == 'backward') {
+							$params['time'] = $params['time'];
+							$op = '<';
+							$fudge = '';
+						}
+					} else { // into detail view from summary view
+						$op = '<='; 
+						$fudge = ':99:99';
+					}
+					$result[] = '(' . $datefield . $op . '\'' . $params['date'] . '\' 
+						or (' . $datefield . '=\'' . $params['date'] . '\' and ' . $timefield . $op . '=\'' . $params['time'] . $fudge . '\'))';
+					return $result;
+				} else {
+					$op = '<'; 
+					$fudge = ':99:99';
+					if (array_key_exists('go', $params)) {
+						if ($params['go'] == 'forward') {
+							$params['time'] = $params['time'];
+							$op = '>';
+							$fudge = '';
+						} elseif ($params['go'] == 'backward') {
+							$params['time'] = $params['time'];
+							$op = '<';
+							$fudge = '';
+						}
+						$result[] = '(' . $datefield . $op . '\'' . $params['date'] . '\' 
+							or (' . $datefield . '=\'' . $params['date'] . '\' and ' . $timefield . $op . '=\'' . $params['time'] . $fudge . '\'))';
+						return $result;
+					} else { // datezoom increase
+						$result[] = '(' . $datefield . $op . '\'' . $params['date'] . '\' 
+							or (' . $datefield . '=\'' . $params['date'] . '\' and ' . $timefield . $op . '=\'' . $params['time'] . $fudge . '\'))';
+						return $result;
+					}
+				}
+			}
+			$op = '<='; 
+			$fudge = '-99'; 
+			if (array_key_exists('go', $params)) {
+				if ($params['go'] == 'forward') {
+					$op = '>=';
+					$fudge = '';
+				} elseif ($params['go'] == 'backward') {
+					$op = '<=';
+					$fudge = '-99';
+				} 
+			} else { // datezoom increase 
+				$op = '<='; 
+				$fudge = '-99'; 
+			}
 			$result[] = $datefield . $op . '\'' . $params['date'] . $fudge . '\'';
-		}
-		if (array_key_exists('time', $params) && $params['time'] != '.') {
-			$hms = explode('-', $params['time']);
-			if (array_key_exists(0, $hms) && ! validate_int($hms[0], 0, 23))
-				return false;
-			if (array_key_exists(1, $hms) && ! validate_int($hms[1], 0, 59))
-				return false;			
-			if (array_key_exists(2, $hms) && ! validate_int($hms[2], 0, 23))
-				return false;
-			$result[] = $timefield . $op . '\'' . $params['time'] . $fudge . '\'';
-		}
+			return $result;
+		} 
+	}
+	private function get_where($params) {
+		$result = $this->get_datetime_where($params);
+		if (array_key_exists('word', $params)) 
+			$result[] = 'word = \'' . $params['word'] . '\'';
 		if (array_key_exists('host', $params)) {
 			$result[] = 's.host=\'' . $this->db->real_escape_string($params['host']) . '\'';
 		}
@@ -823,6 +863,8 @@ class TlnData {
     			group by ' . $datefield . ', ' . $timefield . ', s.source, s.sourcetype, s.version, s.format, s.host
     			order by ' . $datefield . ' ' . $order . ', ' . $timefield . ' ' . $order . ', s.sourcetype, s.sourcetype, s.version, s.format, s.host';
 		$result = array();
+		$my_params = $params;
+		unset($my_params['go']);
 		if ($stmt = $this->db->prepare($sql)) {
 			$stmt->execute();
 			$stmt->store_result();
@@ -830,42 +872,42 @@ class TlnData {
 			$stmt->bind_result($year, $month, $source, $sourcetype, $m, $a, $c, $b, $items, $version, $format, $host);
 			$columns = array();
 			$sourcerows = array();
-			$params['datezoom'] = $this->datezoom_level;
+			$my_params['datezoom'] = $this->datezoom_level;
 			$datetime_count = 0;
 			while ($stmt->fetch() && $datetime_count < 100) {
 				if (( ! isset($oldyear)) || $year == $oldyear) {
-					$params['date'] = $year;
+					$my_params['date'] = $year;
 					if (( ! isset($oldmonth)) || $month == $oldmonth) {
-						$params['time'] = $month;
+						$my_params['time'] = $month;
 						$columns = array();
-						$this->columns($columns, $m, $a, $c, $b, $items, $params);
-						$sourcerows[] = $this->sourcerows($columns, $source, $sourcetype, $version, $format, $host, $params);
+						$this->columns($columns, $m, $a, $c, $b, $items, $my_params);
+						$sourcerows[] = $this->sourcerows($columns, $source, $sourcetype, $version, $format, $host, $my_params);
 						$oldmonth = $month;
 					} else {
-						$result[] = $this->daterows($sourcerows, $year, $oldmonth, $params);
+						$result[] = $this->daterows($sourcerows, $year, $oldmonth, $my_params);
 						$columns = array();
 						$sourcerows = array();
-						$params['time'] = $month;
-						$this->columns($columns, $m, $a, $c, $b, $items, $params);
-						$sourcerows[] = $this->sourcerows($columns, $source, $sourcetype, $version, $format, $host, $params);
+						$my_params['time'] = $month;
+						$this->columns($columns, $m, $a, $c, $b, $items, $my_params);
+						$sourcerows[] = $this->sourcerows($columns, $source, $sourcetype, $version, $format, $host, $my_params);
 						$oldmonth = $month;
 						$datetime_count++;
 					}
 					$oldyear = $year;
 				} else {
-					$result[] = $this->daterows($sourcerows, $oldyear, $oldmonth, $params);
+					$result[] = $this->daterows($sourcerows, $oldyear, $oldmonth, $my_params);
 					$columns = array();
 					$sourcerows = array();
-					$params['time'] = $month;
-					$params['date'] = $year;
-					$this->columns($columns, $m, $a, $c, $b, $items, $params);
-					$sourcerows[] = $this->sourcerows($columns, $source, $sourcetype, $version, $format, $host, $params);
+					$my_params['time'] = $month;
+					$my_params['date'] = $year;
+					$this->columns($columns, $m, $a, $c, $b, $items, $my_params);
+					$sourcerows[] = $this->sourcerows($columns, $source, $sourcetype, $version, $format, $host, $my_params);
 					$oldmonth = $month;
 					$oldyear = $year;
 					$datetime_count++;
 				}
 			}
-			$result[] = $this->daterows($sourcerows, $oldyear, $oldmonth, $params);		
+			$result[] = $this->daterows($sourcerows, $oldyear, $oldmonth, $my_params);		
 			$stmt->free_result();
 		} else {
 			print $this->p('Error getting detail view: ' . $this->db->error);
