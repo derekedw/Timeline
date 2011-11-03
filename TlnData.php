@@ -385,7 +385,7 @@ class TlnData {
 		return true;
 	}
 	function add_group($name, $description, $color, $entries) {
-		if ($id = $this->fill_group($name, $description, $color)) {
+		if (($id = $this->fill_group($name, $description, $color)) > 0) {
 			if ($this->fill_fact_group($id, $entries)) {
 				return true;
 			}
@@ -410,6 +410,16 @@ class TlnData {
 						$color . ')';
 		if ($this->db->query($sql)) {
 			return $this->db->insert_id;
+		} else if ($this->db->errno == 1062) {
+			$sql = 'update tln_group
+					set description = \'' . $this->db->real_escape_string($description)  . '\',
+				        color = ' . $color . '
+				    where name = \'' . $this->db->real_escape_string($name) . '\'';
+			if ($this->db->query($sql)) {
+				$sql = 'select tln_group_id from tln_group where name = \'' . $this->db->real_escape_string($name) . '\'';
+				$result = $this->db->query($sql)->fetch_assoc();
+				return $result['tln_group_id'];
+			}
 		}
 		return false;
 	}

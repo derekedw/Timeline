@@ -164,7 +164,13 @@ if ($input) { # If information was posted, we are importing data. Output is in p
 	} else if (array_key_exists('entries', $_GET)) {
 		if (validate_list($_GET['entries']) && validate_int($_GET['color'], 0, 11)) {
 			$tln->add_group($_GET['name'], $_GET['description'], $_GET['color'], $_GET['entries']);
-			detail_view($tln, $_GET);
+			// ?color=1&name=USB%20mount&description=USB%20drive%20E%20mounted&entries=33640&color=1&name=USB%20mount&description=USB%20drive%20E%20mounted&entries=11309,13001,24745,33639&datezoom=0&date=2009-08&time=.
+			$my_params = $_GET;
+			unset($my_params['name']);
+			unset($my_params['description']);
+			unset($my_params['color']);
+			unset($my_params['entries']);
+			detail_view($tln, $my_params);
 		}
 	} else 
 		summary_view($tln, $_GET);
