@@ -675,6 +675,36 @@ class TlnData {
 		}
 		return false;
 	}
+	function get_report_view() {
+		$sql = 'select g.name, g.description, d.date, t.tick, s.host, s.source, 
+					s.sourcetype, s.m, s.a, s.c, s.b, f.count, f.user, f.description, 
+					f.inode, f.notes, f.extra, g.color
+				from tln_date d inner join (
+						tln_time t inner join (
+							tln_source s inner join (
+								tln_fact f inner join (
+									tln_fact_group fg inner join tln_group g on fg.tln_group_id = g.tln_group_id
+    							) on f.tln_fact_id = fg.tln_fact_id
+    						) on s.tln_source_id = f.tln_source_id
+    					) on t.tln_time_id = f. tln_time_id
+    				) on d.tln_date_id = f.tln_date_id
+    			order by d.date desc, t.tick desc;';
+		$result = array();
+		if ($stmt = $this->db->prepare($sql)) {
+			$stmt->execute();
+			$stmt->store_result();
+			$stmt->bind_result($grp_name, $grp_description, $date, $tick, $host, $source, 
+					$sourcetype, $m, $a, $c, $b, $count, $user, $description, 
+					$inode, $notes, $extra, $color);
+			while ($stmt->fetch()) {  
+				$result[] = array($grp_name, $grp_description, array($m, $a, $c, $b), 
+					array($count, $date, $tick), array($host, $source, $sourcetype, $type,
+					$user, $description, $inode, $notes, $extra), $color);
+			}
+			$stmt->free_result();
+		}
+		return $result;
+	}
 	function get_detail_view($params){
 		$starttime = time();
 		$order = 'DESC';

@@ -98,6 +98,9 @@ function detail_view($tln, $params) {
 				$my_params['time'] = $row[1][2];
 				print '<tr><td colspan="17"><a href="' . h2q($my_params) . '" >continue</a>';
 				print '						<a href="javascript:addSelected(\'' . h2q($params) . '\');">add to a group</a>';
+				$my_params = $params;
+				$my_params['view'] = 'report';
+				print '                     <a href="' . h2q($my_params) . '">report</a>';
 				$run_once = true;
 			}
 			$macb = $row[0];
@@ -119,11 +122,45 @@ function detail_view($tln, $params) {
 		unset($my_params['date']);
 		unset($my_params['time']);
 		print '						<a href="javascript:addSelected(\'' . h2q($params) . '\');">add to a group</a>';
+		$my_params = $params;
+		$my_params['view'] = 'report';
+		print '                     <a href="' . h2q($my_params) . '">report</a>';
 		print "</tbody></table>\n";
 	} else {
 		print $tln->h1("No data");
 	}
 	print "</div>\n";
+}
+function report_view($tln) {
+	$result = $tln->get_report_view();
+	print '<div id="report"><table><thead><tr>
+		  <th>Count</th>
+		  <th>Date</th>
+		  <th>Time</th>
+		  <th>MACB</th>
+		  <th>Host</th>
+		  <th>Source</th>
+		  <th>Sourcetype</th>
+		  <th>Type</th>
+		  <th>User</th>
+		  <th>Description</th> 
+		  <th>Inode</th>
+		  <th>Notes</th>
+		  <th>Extra</th>
+		</tr></thead><tbody>';
+	$oldgrpname  = '';
+	$oldgrpdesc  = '';
+	foreach ($result as $row) {
+		if ($oldgrpname != $row[0]) {
+			print '<tr class="group' . $row[5] . '"><td colspan="4">' . $row[0] . '</td><td colspan="9">' . $row[1] . "</td></tr>\n";
+			$oldgrpname  = $row[0];
+			$oldgrpdesc  = $row[1];
+		}
+		print '<tr class="group' . $row[5] . '"><td>' . implode('</td><td>', $row[3]) . "</td>\n";
+		print '<td>' . implode('', $row[2]) . "</td>\n";
+		print '<td>' . implode('</td><td>', $row[4]) . "</td><tr>\n";
+	}
+	print '</tbody></table></div>';
 }
 
 function canvas_start() {
@@ -160,6 +197,8 @@ if ($input) { # If information was posted, we are importing data. Output is in p
 	if (array_key_exists('view', $_GET)) {
 		if ($_GET['view'] == 'detail') {
 			detail_view($tln, $_GET);
+		} else if ($_GET['view'] == 'report') {
+			report_view($tln, $_GET);
 		}
 	} else if (array_key_exists('entries', $_GET)) {
 		if (validate_list($_GET['entries']) && validate_int($_GET['color'], 0, 11)) {
