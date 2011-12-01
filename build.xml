@@ -3,7 +3,7 @@
      <target name="install" depends="copyJavascript,copyImg,copyDate-chooser">
         <echo>Copying PHP scripts to server</echo>
         <copy todir="${timeline.docroot}">
-        	<fileset dir=".">
+        	<fileset dir="webroot">
         		<include name="*.php" />
         		<include name="*.css" />
         	</fileset>
@@ -12,7 +12,7 @@
   	 <target name="copyJavascript">
         <echo>Copying Javascript to server</echo>
   	 	<copy todir="${timeline.docroot}">
-        	<fileset dir=".">
+        	<fileset dir="webroot">
         		<include name="*.js" />
         	</fileset>
   	 	</copy>
@@ -20,7 +20,7 @@
   	 <target name="copyImg">
         <echo>Copying images to server</echo>
   	 	<copy todir="${timeline.docroot}">
-        	<fileset dir=".">
+        	<fileset dir="webroot">
         		<include name="*.png" />
         		<include name="*.gif" />
         	</fileset>
