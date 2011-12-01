@@ -1,0 +1,41 @@
+Tapestry: An Apache/PHP/MySQL web application for analysis of Super 
+Timelines created using log2timeline
+
+I. Installation:
+   Prerequisite:  A working Apache/PHP/MySQL installation
+   
+   1. In MySQL:
+    
+      a. Create a database:
+         
+         create database timeline;
+         
+      b. Create a database user (assuming database is on the localhost)
+         
+         grant all privileges on 'timeline'.* to 'yourMySQLUser'@'localhost' 
+         identified by 'yourMySQLPassword';
+   
+   2. On the web server:
+   
+      a. Copy the files from the 'webroot' directory to a directory under 
+         your web server's root, such as 'Timeline'.
+      
+      b. Copy tln-config-default.php to tln-config.php
+      
+      c. Edit tln-config.php to reflect the database name, database user name,
+         and database password.  
+      
+   3. In a web browser:
+
+      a. Run the install.php script.  For example, go to http://localhost/Timeline/install.php
+      
+   4. Import data in log2timeline CSV format using an import script: 
+      test_import.pl (Windows/UNIX) or test_import.vbs (Windows)
+   
+      test_import.pl http://localhost/Timeline/ < bodyfile
+          or
+      cscript test_import.vbs bodyfile http://localhost/Timeline/    
+
+For additional information, see the accompanying paper in the 
+SANS Reading Room at:
+http://www.giac.org/paper/gcfa/2966/computer-forensic-timeline-analysis-tapestry/115456
