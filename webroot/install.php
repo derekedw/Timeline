@@ -30,6 +30,9 @@ if ($tln->has_tables(TLNDBNAME)) {
 			 </form>
 			<?php 
 		}
+	} else {
+		print $tln->h1("This database is already up to date with the installed Tapestry code");
+		print $tln->p("Check periodically for updated code at <a href=\"http://github.com/derekedw/Timeline\">http://github.com/derekedw/Timeline</a>");
 	}
 } else {
 	if (Job::create($db)) {

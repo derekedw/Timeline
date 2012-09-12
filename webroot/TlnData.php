@@ -904,7 +904,7 @@ class TlnData {
 		}
 		$sql = 'select sum(count) as count, 
 					d.date, t.tick, s.source, s.sourcetype, 
-					s.m, s.a, s.c, s.b,	f.user, s.host, f.short, f.description, 
+					s.m, s.a, s.c, s.b,	s.user, s.host, f.short, f.description, 
 					f.filename, f.inode, f.notes, f.extra, s.type, s.version, s.format, f.tln_fact_id, g.color
     			from (tln_date d inner join (
 	    		        tln_time t inner join (

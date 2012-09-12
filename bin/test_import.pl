@@ -1,3 +1,4 @@
+#!/bin/perl 
 use strict;
 use LWP::UserAgent;
 use HTTP::Date;
