@@ -58,13 +58,18 @@ class TlnData {
 						'description' => 'setting constraints in the \'tln_fact\' table'
 				),
 				'remove_constraint2' =>
-				array(	'sql' => 'mysql> alter table tln_fact
+				array(	'sql' => 'alter table tln_fact
 						drop index tln_fact_uniq',
 						'description' => 'removing constraints in the \'tln_fact\' table'
 				),
 				'cleanup2' =>
 				array(	'sql' => 'drop table tln_hash',
 						'description' => 'clearing temporary table'
+				),
+				'updatev1tov2' => 
+				array(	'sql' => 'update tln_version
+								set version = 2',
+						'description' => 'updating the database\'s version number'
 				)
 		);
 	}
@@ -92,13 +97,29 @@ class TlnData {
 		if (($stmt = $this->db->prepare($sql))) {
 			if ($stmt->execute()) { 
 				if ($stmt->bind_result($version)) {
+					while ($stmt->fetch())
+						;
 					return $version;
 				}
 			}  
 		}
 		return 0;
 	}
-	
+	public function has_tables($dbname) {
+		$sql = 'select count(*) as \'exists\' from information_schema.tables 
+		where table_schema = ? and table_name = \'tln_version\'';
+		if (($stmt = $this->db->prepare($sql))) {
+			$stmt->bind_param('s', $dbname);
+			if ($stmt->execute()) {
+				if ($stmt->bind_result($exists)) {
+					while ($stmt->fetch())
+						;
+					return $exists == 1;
+				}
+			}
+		}
+		return 0;
+	}
 	/**
 	 * Prints version data for the updates that have yet to be applied to the 
 	 * database, as an HTML table
@@ -285,7 +306,7 @@ class TlnData {
 	 * required to advance the database's version number. 
 	 */
 	public function do_upgrade() {
-		for ($i = $this->get_db_version(); $i <= $this->get_code_version(); $i++) {
+		for ($i = ($this->get_db_version() + 1); $i <= $this->get_code_version(); $i++) {
 			$function = 'do_upgrade' . $i;
 			$this->$function();
 		}
@@ -297,7 +318,7 @@ class TlnData {
 	 */
 	private function do_generic_query($op) {
 		$starttime = time();
-		if (property_exists($this->generic_query, $op)) {
+		if (array_key_exists($op, $this->generic_query)) {
 			if ($this->db->query($this->generic_query[$op]['sql']) == TRUE) {
 				$endtime = time();
 				print $this->h1($this->generic_query[$op]['description'] . ' in ' . gmdate('H:i:s', $endtime - $starttime));
@@ -315,13 +336,15 @@ class TlnData {
 	 * Upgrades a version 1 database to a version 2 database
 	 */
 	private function do_upgrade2() {
-		if (do_generic_query('alter_columns2')) {
-			if (do_generic_query('generate_hash2')) {
-				if (do_generic_query('fold_hash2')) {
-					if (do_generic_query('set_constraint2')) {
-						if (do_generic_query('remove_constraint2')) {
-							if (do_generic_query('cleanup2')) {
-								print $this->p("All done!");		
+		if ($this->do_generic_query('alter_columns2')) {
+			if ($this->do_generic_query('generate_hash2')) {
+				if ($this->do_generic_query('fold_hash2')) {
+					if ($this->do_generic_query('set_constraint2')) {
+						if ($this->do_generic_query('remove_constraint2')) {
+							if ($this->do_generic_query('cleanup2')) {
+								if ($this->do_generic_query('updatev1tov2')) {
+									print $this->p("All done!");		
+								}
 							}		
 						}		
 					}		
