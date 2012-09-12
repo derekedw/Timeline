@@ -34,7 +34,6 @@ class TlnData {
 		date_default_timezone_set("GMT");
 		$this->generic_query = array('alter_columns2' =>
 				array(	'sql' => 'alter table tln_fact
-						drop column user,
 						add column hash char(40) null',
 						'description' => 'altering columns in the \'tln_fact\' table'
 				),
@@ -279,6 +278,7 @@ class TlnData {
 	    	tln_source_id BIGINT UNSIGNED NOT NULL,
 	    	tln_concurrency_id BIGINT UNSIGNED NOT NULL,
 	    	count BIGINT UNSIGNED NOT NULL,
+			user VARCHAR(50) NOT NULL,
 			short VARCHAR(1000) NOT NULL,
 			description VARCHAR(1000) NOT NULL,
 			filename VARCHAR(1000) NOT NULL,
@@ -904,7 +904,7 @@ class TlnData {
 		}
 		$sql = 'select sum(count) as count, 
 					d.date, t.tick, s.source, s.sourcetype, 
-					s.m, s.a, s.c, s.b,	s.user, s.host, f.short, f.description, 
+					s.m, s.a, s.c, s.b,	f.user, s.host, f.short, f.description, 
 					f.filename, f.inode, f.notes, f.extra, s.type, s.version, s.format, f.tln_fact_id, g.color
     			from (tln_date d inner join (
 	    		        tln_time t inner join (
