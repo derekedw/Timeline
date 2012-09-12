@@ -18,10 +18,28 @@ if (mysqli_connect_errno()) {
 if (Job::create($db)) {
 	$job = Job::get_new();
 	$tln = new TlnData($db);
-	if (!$tln->create_db($job)) {
-		print $tln->h1('Install unsuccessful');
-		$db->close();
+	if ($tln->has_upgrade()) {
+		if (array_key_exists('choice', $_POST) && $_POST['choice'] == "Yes") {
+			$tln->do_upgrade();
+		} else {
+			?>
+			<h1>The code base was updated to version <?php $tln->get_code_version() ?>, but the database is at version <?php $tln->get_code_version() ?></h1>
+			<p>Would you like to upgrade?</p>
+			<?php $tln->get_upgrade_info(); ?>
+			<form method="post" action="install.php">
+				<input type="submit" name="choice" VALUE="Yes">
+				<input type="submit" name="choice" VALUE="No">
+			 </form>
+			<?php 
+		}
+	} else {
+		if (!$tln->create_db($job)) {
+			print $tln->h1('Install unsuccessful');
+			$db->close();
+		}
 	}
 }
 include 'footer.php';				
 ?>
+</body>
+</html>

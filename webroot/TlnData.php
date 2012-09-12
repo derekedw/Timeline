@@ -5,8 +5,21 @@ require_once('Job.php');
 
 class TlnData {
 	
+	/**
+	 * Constructor of the classes that does all the mysql data import, display and maintenance
+	 * issue001 sets a db_version field that can be used to ensure the proper code is in use
+	 * @param mysqli object $db
+	 */
 	public function __construct(&$db) {
 		$this->db = $db;
+		$this->code_version = 2;
+		$this->upgrade_info = array(2 => array(	'Reimport recommended' => 'yes', 
+												'Description' => 'The UNIQUE INDEX on the main fact table ' . 
+												'causes long pathnames in the source and description fields ' . 
+												'to be grouped as duplicates. Data was hidden, ' . 
+												'so reimporting the data is strongly recommended.'),
+									1 => array(	'Reimport recommended' => 'yes',
+												'Description' => 'Initial Tapestry version'));
 		$this->maxInsert = 2501;
 		$this->page = array('param_name' => 'page',
 							'size' => 50,
@@ -19,6 +32,91 @@ class TlnData {
 								array('name' => 'second', 'datefield' => 'd.day', 'timefield' => 't.second'));
 		$this->datezoom_level = 0;
 		date_default_timezone_set("GMT");
+		$this->generic_query = array('alter_columns2' =>
+				array(	'sql' => 'alter table tln_fact
+						drop column user,
+						add column hash char(40) null',
+						'description' => 'altering columns in the \'tln_fact\' table'
+				),
+				'generate_hash2' =>
+				array(	'sql' => 'create temporary table tln_hash as
+						select tln_fact_id,
+						sha1(concat(short, description, filename)) as hash
+						from tln_fact',
+						'description' => 'generating hashes of data in the \'tln_fact\' table'
+				),
+				'fold_hash2' =>
+				array(	'sql' => 'update tln_fact, tln_hash
+						set tln_fact.hash = tln_hash.hash
+						where tln_fact.tln_fact_id = tln_hash.tln_fact_id',
+						'description' => 'folding the hashes into the \'tln_fact\' table'
+				),
+				'set_constraint2' =>
+				array(	'sql' => 'alter table tln_fact
+						modify column hash char(40) not null,
+						add UNIQUE KEY tln_fact_uniq2(tln_date_id, tln_time_id, tln_source_id, inode, hash)',
+						'description' => 'setting constraints in the \'tln_fact\' table'
+				),
+				'remove_constraint2' =>
+				array(	'sql' => 'mysql> alter table tln_fact
+						drop index tln_fact_uniq',
+						'description' => 'removing constraints in the \'tln_fact\' table'
+				),
+				'cleanup2' =>
+				array(	'sql' => 'drop table tln_hash',
+						'description' => 'clearing temporary table'
+				)
+		);
+	}
+	/**
+	 * The database has a version number, which is a positive integer.
+	 * @return the database version with which this code is designed to operate
+	 */
+	public function get_code_version() {
+		return $this->code_version;
+	}
+	/**
+	 * This method notes differences between the code version and the database version
+	 * @return true if the code version is greater than the database version
+	 */
+	public function has_upgrade () {
+		$db_version = $this->get_db_version(); 
+		return ($db_version > 0 && $db_version < $this->code_version);
+	}
+	/**
+	 * Fetches the database version number by queying the database
+	 * @return The database's version number, as stored in tln_version.version
+	 */
+	public function get_db_version() {
+		$sql = 'select version from tln_version';
+		if (($stmt = $this->db->prepare($sql))) {
+			if ($stmt->execute()) { 
+				if ($stmt->bind_result($version)) {
+					return $version;
+				}
+			}  
+		}
+		return 0;
+	}
+	
+	/**
+	 * Prints version data for the updates that have yet to be applied to the 
+	 * database, as an HTML table
+	 * @return an HTML table with information on database updgrades that have 
+	 * not been applied
+	 */
+	public function get_upgrade_info() {
+		print '<table>';
+		foreach ($this->upgrade_info as $key => $value) {
+			foreach ($value as $k => $v) { 
+				print '<tr>';
+			  	print '<td>' . $key . '</td>';
+				print '<td>' . $k . '</td>';
+				print '<td>' . $v . '</td>';
+			  	print '</tr>';
+  			}
+		}
+		print '</table>';
 	}
 	function get_row_count() {
 		return $this->row_count;		
@@ -160,15 +258,15 @@ class TlnData {
 	    	tln_source_id BIGINT UNSIGNED NOT NULL,
 	    	tln_concurrency_id BIGINT UNSIGNED NOT NULL,
 	    	count BIGINT UNSIGNED NOT NULL,
-			user VARCHAR(50) NOT NULL,
 			short VARCHAR(1000) NOT NULL,
 			description VARCHAR(1000) NOT NULL,
 			filename VARCHAR(1000) NOT NULL,
 			inode VARCHAR(25) NOT NULL,
 			notes VARCHAR(255) NOT NULL,
 			extra  VARCHAR(255) NOT NULL,
+			hash CHAR(40) NOT NULL,
 			PRIMARY KEY (tln_fact_id),		
-			UNIQUE KEY tln_fact_uniq(tln_date_id, tln_time_id, tln_source_id, description(255), filename(255), inode),
+			UNIQUE KEY tln_fact_uniq2(tln_date_id, tln_time_id, tln_source_id, inode, hash),
 			FOREIGN KEY (tln_date_id) REFERENCES tln_date(tln_date_id),
 			FOREIGN KEY (tln_time_id) REFERENCES tln_time(tln_time_id),
 			FOREIGN KEY (tln_source_id) REFERENCES tln_source(tln_source_id)
@@ -182,6 +280,56 @@ class TlnData {
 			return false;
 		}
 	}
+	/**
+	 * Starts the process of upgrading a database.  It calls each upgrade script 
+	 * required to advance the database's version number. 
+	 */
+	public function do_upgrade() {
+		for ($i = $this->get_db_version(); $i <= $this->get_code_version(); $i++) {
+			$function = 'do_upgrade' . $i;
+			$this->$function();
+		}
+	}
+	
+	/**
+	 * A parameterized way of executing simple SQL queries 
+	 * @param string $op is a key to a generic query
+	 */
+	private function do_generic_query($op) {
+		$starttime = time();
+		if (property_exists($this->generic_query, $op)) {
+			if ($this->db->query($this->generic_query[$op]['sql']) == TRUE) {
+				$endtime = time();
+				print $this->h1($this->generic_query[$op]['description'] . ' in ' . gmdate('H:i:s', $endtime - $starttime));
+				return true;
+			} else {
+				print $this->h1('Error ' . $this->generic_query[$op]['description'] . ': ' . $this->db->error . "<br />");
+				return false;
+			}
+		} else {
+			print $this->h1("Invalid generic query: " . $op);
+			return false;
+		}
+	}
+	/**
+	 * Upgrades a version 1 database to a version 2 database
+	 */
+	private function do_upgrade2() {
+		if (do_generic_query('alter_columns2')) {
+			if (do_generic_query('generate_hash2')) {
+				if (do_generic_query('fold_hash2')) {
+					if (do_generic_query('set_constraint2')) {
+						if (do_generic_query('remove_constraint2')) {
+							if (do_generic_query('cleanup2')) {
+								print $this->p("All done!");		
+							}		
+						}		
+					}		
+				}		
+			}	
+		}
+	}
+
     private function create_import_word() {
 		$starttime = time();
 		$sql = 'CREATE TABLE tln_import_word (
@@ -423,9 +571,14 @@ class TlnData {
 		}
 		return false;
 	}
+	
+	/**
+	 * Fills the tln_version table during a clean database install
+	 * issue001 
+	 */
 	private function fill_version() {
 		$starttime = time();
-		$sql = 'insert into tln_version (version) values(1)';
+		$sql = 'insert into tln_version (version) values(' . $this->db_version . ')';
 		if (! $this->db->query($sql)) {
 			print $this->p('Error filling table: ' . $this->db->error . "<br />");
 			return false;
@@ -450,14 +603,21 @@ class TlnData {
 	}
 	private function fill_fact($concurrency) {
 		$starttime = time();
-		$sql = 'insert ignore into tln_fact(tln_date_id, tln_time_id, tln_source_id, tln_concurrency_id, count, user, short, description, filename, inode, notes, extra)
-    			select d.tln_date_id, t.tln_time_id, s.tln_source_id, i.tln_concurrency_id, count(*), i.user, i.short, i.description, i.filename, i.inode, i.notes, i.extra
+		$sql = 'insert ignore into tln_fact(tln_date_id, tln_time_id, tln_source_id, 
+					tln_concurrency_id, count, user, short, 
+					description, filename, inode, notes, extra, hash)
+    			select d.tln_date_id, t.tln_time_id, s.tln_source_id, 
+    				i.tln_concurrency_id, count(*), i.user, i.short, 
+    				i.description, i.filename, i.inode, i.notes, i.extra, 
+    				sha1(concat(i.short, i.description, i.filename)) as hash
     			from tln_date d, tln_time t, tln_source s, tln_import i
-    			where d.date = i.date and t.tick = i.tick and s.source = i.source and s.sourcetype = i.sourcetype and 
+    			where d.date = i.date and t.tick = i.tick and s.source = i.source and 
+    				s.sourcetype = i.sourcetype and 
     				s.M = i.M and s.A = i.A and s.C = i.C and s.B = i.B and 
-    				s.type = i.type and s.version = i.version and s.format = i.format and s.host = i.host and
+    				s.type = i.type and s.version = i.version and s.format = i.format and 
+    				s.host = i.host and
     				i.tln_concurrency_id = ' . $concurrency . '
-    			group by d.tln_date_id, t.tln_time_id, s.tln_source_id, substring(i.description,255), substring(i.filename,255), i.inode';
+    			group by d.tln_date_id, t.tln_time_id, s.tln_source_id, i.inode, hash';
 		if (! $this->db->query($sql)) {
 			print('Error filling \'tln_fact\' table: ' . $this->db->error . "\n");
 			return false;
@@ -1094,4 +1254,5 @@ class TlnData {
 		return true;
 	}
 }
+
 ?>
