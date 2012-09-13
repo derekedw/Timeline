@@ -1,7 +1,7 @@
 Set wshshell = CreateObject("WScript.Shell")
 Set oFS = CreateObject("Scripting.FileSystemObject")
 Set oOutput = CreateObject("Msxml2.DOMDocument.3.0")
-iMaxLines = 2500
+iMaxLines = 2000
 iLineNo = 0
 
 If Wscript.Arguments.Count = 2 Then
