@@ -37,13 +37,12 @@ if ($tln->has_tables(TLNDBNAME)) {
 } else {
 	if (Job::create($db)) {
 		$job = Job::get_new();
-		if (!$tln->create_db($job)) {
+		if (!$tln->create_db($job)) 
 			print $tln->h1('Install unsuccessful');
-			$db->close();
-		}
 	}
 }
-include 'footer.php';				
+include 'footer.php';	
+$db->close();
 ?>
 </body>
 </html>

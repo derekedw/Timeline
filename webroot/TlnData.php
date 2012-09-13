@@ -601,7 +601,7 @@ class TlnData {
 	 */
 	private function fill_version() {
 		$starttime = time();
-		$sql = 'insert into tln_version (version) values(' . $this->db_version . ')';
+		$sql = 'insert into tln_version (version) values(' . $this->code_version . ')';
 		if (! $this->db->query($sql)) {
 			print $this->p('Error filling table: ' . $this->db->error . "<br />");
 			return false;
@@ -725,6 +725,8 @@ class TlnData {
 		print "Skipped entries: ";
 		$sql = "insert into tln_import (date,tick,timezone,M,A,C,B,source,sourcetype,type,user,host,short,description,version,filename,inode,notes,format,extra,tln_concurrency_id) values\n";
 		foreach(preg_split('/\n/', $text) as $input) {
+			// replace nonprintable characters
+			$input = $this->replace_nonprintable($input);
 			if (! $this->validate_content($input)) {
 				print "'" . $input . "', ";
 				$skipped++;
@@ -1045,7 +1047,7 @@ class TlnData {
 			$result[] = 's.sourcetype=\'' . $this->db->real_escape_string($params['sourcetype']) . '\'';
 		}
 		if (array_key_exists('format', $params)) {
-			$result[] = 's.formate=\'' . $this->db->real_escape_string($params['format']) . '\'';
+			$result[] = 's.format=\'' . $this->db->real_escape_string($params['format']) . '\'';
 		}
 		if (array_key_exists('version', $params)) {
 			$result[] = 's.version=\'' . $this->db->real_escape_string($params['version']) . '\'';
@@ -1275,6 +1277,15 @@ class TlnData {
 		if (! preg_match('@^\d+/\d+/\d+,\d+:\d+:\d+,\w+,[M.][A.][C.][B.],[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]*,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+$@', $input, $match)) 
 			return false;
 		return true;
+	}
+	
+	private function replace_nonprintable($input) {
+		$offset = 0;
+		while (preg_match('/[^[:print:]]/', $input, $matches, PREG_OFFSET_CAPTURE, $offset)) {
+			$input = substr_replace($input, '[0x'. dechex(ord($matches[0][0])) . ']', $matches[0][1], 1);
+			$offset = $matches[0][1];
+		}
+		return $input;
 	}
 }
 
