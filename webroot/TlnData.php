@@ -20,7 +20,7 @@ class TlnData {
 												'so reimporting the data is strongly recommended.'),
 									1 => array(	'Reimport recommended' => 'yes',
 												'Description' => 'Initial Tapestry version'));
-		$this->maxInsert = 2501;
+		$this->maxInsert = 2001;
 		$this->page = array('param_name' => 'page',
 							'size' => 50,
 							'current' => 0,
@@ -720,19 +720,24 @@ class TlnData {
 		$inserted = 0;
 		$skipped = 0;
 		$dup = 0;
+		$blank = 0;
 		$count = 0;
 		$rows = array();
 		print "Skipped entries: ";
-		$sql = "insert into tln_import (date,tick,timezone,M,A,C,B,source,sourcetype,type,user,host,short,description,version,filename,inode,notes,format,extra,tln_concurrency_id) values\n";
 		foreach(preg_split('/\n/', $text) as $input) {
 			// replace nonprintable characters
+			$input = trim($input);
 			$input = $this->replace_nonprintable($input);
+			if (empty($input)) {
+				$blank++;
+				continue;
+			}
 			if (! $this->validate_content($input)) {
 				print "'" . $input . "', ";
 				$skipped++;
 				continue;
 			}
-			$elements = explode(',', trim($input));
+			$elements = explode(',', $input);
 			if ((count($elements)) != 17) {
 				// discard this row as a duplicate.  Alternatively, you could:  array_splice($elements, 6, 2);
 				$dup++;
@@ -767,24 +772,35 @@ class TlnData {
 				$concurrency . ')';												// tln_concurrency_id	
 			$count++;
 			if (0 == ($count % $this->maxInsert)) {
-				if (! $this->db->query($sql . implode(",\n", $rows))) {
-					print 'Error filling \'tln_import\' table: ' . $this->db->error . "\n";
+				if (($status = $this->fill_import_rows($rows)) != -1) {
+					$inserted += $status; 
+				} else {
 					return false;
 				}
-				$inserted += $this->db->affected_rows;
 				// reset the counters
 				$count = 0;
 				$rows = array();
 			}
 		}
-		if (! $this->db->query($sql . implode(",\n", $rows))) {
-			print 'Error filling \'tln_import\' table: ' . $this->db->error . "\n";
+		if (($status = $this->fill_import_rows($rows)) != -1) {
+			$inserted += $status; 
+		} else {
 			return false;
 		}
-		$inserted += $this->db->affected_rows;
 		$endtime = time();
-		print "\n" . $inserted . ' import rows inserted, ' . $skipped . ' skipped, ' . $dup . ' duplicates in ' . gmdate('H:i:s', $endtime - $starttime) . "\n";
+		print "\n" . $inserted . ' import rows inserted, ' . $skipped . ' skipped, ' . $blank . ' blank ,' . $dup . ' duplicates in ' . gmdate('H:i:s', $endtime - $starttime) . "\n";
 		return true;
+	}
+	private function fill_import_rows(array $rows) {
+		if (count($rows) == 0) {
+			return 0;
+		}
+		$sql = "insert into tln_import (date,tick,timezone,M,A,C,B,source,sourcetype,type,user,host,short,description,version,filename,inode,notes,format,extra,tln_concurrency_id) values\n";
+		if (! $this->db->query($sql . implode(",\n", $rows))) {
+			print 'Error filling \'tln_import\' table: ' . $this->db->error . "\n";
+			return -1;
+		}
+		return $this->db->affected_rows;
 	}
 	function import(&$text) {
 		$job = Job::get_new();
@@ -809,8 +825,7 @@ class TlnData {
 											// COMMIT
 											if ($this->commit($job->getId())) {
 												print 'All done in ' . gmdate("H:i:s", time() - $job->getId()) . "\n";
-												$this->db->close();
-												exit(0);
+												return (0);
 											}
 										}
 									}
@@ -1274,9 +1289,11 @@ class TlnData {
 		return true;
 	}
 	private function validate_content($input) {
-		if (! preg_match('@^\d+/\d+/\d+,\d+:\d+:\d+,\w+,[M.][A.][C.][B.],[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]*,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+$@', $input, $match)) 
+		if (! preg_match('@^\d+/\d+/\d+,\d+:\d+:\d+,\w+,[M.][A.][C.][B.],[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]*,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+,[^,]+$@', $input, $match)) { 
 			return false;
-		return true;
+		} else { 
+			return true;
+		}
 	}
 	
 	private function replace_nonprintable($input) {
