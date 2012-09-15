@@ -788,7 +788,7 @@ class TlnData {
 			return false;
 		}
 		$endtime = time();
-		print "\n" . $inserted . ' import rows inserted, ' . $skipped . ' skipped, ' . $blank . ' blank ,' . $dup . ' duplicates in ' . gmdate('H:i:s', $endtime - $starttime) . "\n";
+		print "\n" . $inserted . ' import rows inserted, ' . $skipped . ' skipped, ' . $blank . ' blank, ' . $dup . ' duplicates in ' . gmdate('H:i:s', $endtime - $starttime) . "\n";
 		return true;
 	}
 	private function fill_import_rows(array $rows) {
