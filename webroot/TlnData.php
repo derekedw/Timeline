@@ -138,10 +138,10 @@ class TlnData {
 		}
 		print '</table>';
 	}
-	function get_row_count() {
-		return $this->row_count;		
+	private function get_row_count() {	
+		return $this->row_count;
 	}
-	function set_row_count($n) {
+	private function set_row_count($n) {
 		$this->row_count = $n;
 	}
 	private function create_import() {
@@ -170,7 +170,7 @@ class TlnData {
 			extra  VARCHAR(255) NOT NULL,
 			tln_concurrency_id BIGINT UNSIGNED NOT NULL,
 			PRIMARY KEY (tln_import_id)
-		)';
+		) ENGINE=InnoDB';
 		if ($this->db->query($sql) == TRUE) {
 			$endtime = time();
 			print $this->h1('Created \'tln_import\' table in ' . gmdate('H:i:s', $endtime - $starttime));
@@ -191,7 +191,7 @@ class TlnData {
 					day VARCHAR(10) NOT NULL,
 					UNIQUE KEY tln_date_uniq(date, year, month, day),
 					PRIMARY KEY (tln_date_id)
-				)';
+				) ENGINE=InnoDB';
 		if ($this->db->query($sql) == TRUE) {
 			$endtime = time();
 			print $this->h1('Created \'tln_date\' table in ' . gmdate('H:i:s', $endtime - $starttime));
@@ -214,7 +214,7 @@ class TlnData {
 					second VARCHAR(8) NOT NULL,
 					UNIQUE KEY tln_time_uniq(tick, hour, minute, second),
 					PRIMARY KEY (tln_time_id)
-				)';
+				) ENGINE=InnoDB';
 		if ($this->db->query($sql) == TRUE) {
 			$endtime = time();
 			print $this->h1('Created \'tln_time\' table in ' . gmdate('H:i:s', $endtime - $starttime));
@@ -231,7 +231,7 @@ class TlnData {
 			version TINYINT UNSIGNED DEFAULT 1 NOT NULL,
 			last_modified TIMESTAMP,
 			PRIMARY KEY (version)
-		)';
+		) ENGINE=InnoDB';
 		if ($this->db->query($sql) == TRUE) {
 			$endtime = time();
 			print $this->h1('Created \'tln_version\' table in ' . gmdate('H:i:s', $endtime - $starttime));
@@ -259,7 +259,7 @@ class TlnData {
 			B CHAR(1) NOT NULL default \'.\',
 			PRIMARY KEY (tln_source_id),
 			UNIQUE (source, sourcetype, type, host, version, format, M, A, C, B)
-		)';
+		) ENGINE=InnoDB';
 		if ($this->db->query($sql) == TRUE) {
 			$endtime = time();
 			print $this->h1('Created \'tln_source\' table in ' . gmdate('H:i:s', $endtime - $starttime));
@@ -291,7 +291,7 @@ class TlnData {
 			FOREIGN KEY (tln_date_id) REFERENCES tln_date(tln_date_id),
 			FOREIGN KEY (tln_time_id) REFERENCES tln_time(tln_time_id),
 			FOREIGN KEY (tln_source_id) REFERENCES tln_source(tln_source_id)
-		)';
+		) ENGINE=InnoDB';
 		if ($this->db->query($sql) == TRUE) {
 			$endtime = time();
 			print $this->h1('Created \'tln_fact\' table in ' . gmdate('H:i:s', $endtime - $starttime));
@@ -362,7 +362,7 @@ class TlnData {
 	    	tln_concurrency_id BIGINT UNSIGNED NOT NULL, 
 			PRIMARY KEY (tln_import_word_id),		
 			UNIQUE KEY tln_import_word_uniq(tln_fact_id, word)
-		)';
+		) ENGINE=InnoDB';
 		if ($this->db->query($sql) == TRUE) {
 			$endtime = time();
 			print $this->h1('Created \'tln_import_word\' table in ' . gmdate('H:i:s', $endtime - $starttime));
@@ -379,7 +379,7 @@ class TlnData {
 	    	word VARCHAR(255) NOT NULL,
 			UNIQUE KEY tln_word_uniq(word),
 	    	PRIMARY KEY (tln_word_id)		
-		)';
+		) ENGINE=InnoDB';
 		if ($this->db->query($sql) == TRUE) {
 			$endtime = time();
 			print $this->h1('Created \'tln_word\' table in ' . gmdate('H:i:s', $endtime - $starttime));
@@ -398,7 +398,7 @@ class TlnData {
 	    	color INT NULL,
 			UNIQUE KEY tln_group_uniq(name),
 	    	PRIMARY KEY (tln_group_id)		
-		)';
+		) ENGINE=InnoDB';
 		if ($this->db->query($sql) == TRUE) {
 			$endtime = time();
 			print $this->h1('Created \'tln_group\' table in ' . gmdate('H:i:s', $endtime - $starttime));
@@ -416,7 +416,7 @@ class TlnData {
 	    	PRIMARY KEY (tln_word_id, tln_fact_id),		
 			FOREIGN KEY (tln_fact_id) REFERENCES tln_fact(tln_fact_id),
 			FOREIGN KEY (tln_word_id) REFERENCES tln_word(tln_word_id)
-		)';
+		) ENGINE=InnoDB';
 		if ($this->db->query($sql) == TRUE) {
 			$endtime = time();
 			print $this->h1('Created \'tln_fact_word\' table in ' . gmdate('H:i:s', $endtime - $starttime));
@@ -482,7 +482,7 @@ class TlnData {
 	    	PRIMARY KEY (tln_group_id, tln_fact_id),		
 			FOREIGN KEY (tln_fact_id) REFERENCES tln_fact(tln_fact_id),
 			FOREIGN KEY (tln_group_id) REFERENCES tln_group(tln_group_id)
-		)';
+		) ENGINE=InnoDB';
 		if ($this->db->query($sql) == TRUE) {
 			$endtime = time();
 			print $this->h1('Created \'tln_fact_group\' table in ' . gmdate('H:i:s', $endtime - $starttime));
@@ -1116,6 +1116,8 @@ class TlnData {
 			$stmt->execute();
 			$stmt->store_result();
 			$this->set_row_count($stmt->num_rows);
+			if ($this->get_row_count() <= 0)
+				return $result;
 			$stmt->bind_result($year, $month, $source, $sourcetype, $m, $a, $c, $b, $items, $version, $format, $host);
 			$columns = array();
 			$sourcerows = array();

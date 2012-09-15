@@ -1,4 +1,4 @@
-#!/bin/perl 
+#!/usr/bin/perl
 use strict;
 use LWP::UserAgent;
 use HTTP::Date;
@@ -8,11 +8,27 @@ my $oOutput = XML::LibXML->createDocument;
 
 my $iMaxLines = 2000;
 my $iLineNo = 0;
+my $oEle;
+my $strURL;
+my $file;
 
-if ($#ARGV == 0) {
-	my $strURL = shift;
+print "$#ARGV\n";
+if ($#ARGV == 1) {
+	$file = shift;
+	$strURL = shift;
+	open FILE, $file or die $!;
+	$oEle = $oOutput->createComment("Reading " . $file);
+} elsif ($#ARGV == 0) {
+	$strURL = shift;
+	open FILE, '-' or die $!;
+	$oEle = $oOutput->createComment("Reading STDIN");
+} else { 
+	print("Usage:  " . $0 . " [<file>] http://<server>[[:<port>]/<path>]/\n\n");
+	print("\t$0 reads data from a file or standard input, and sends it\n" .
+		"\tto the Tapestry web server via HTTP.\n\n");
+	exit(1);
+}
 	
-	my $oEle = $oOutput->createComment("Reading STDIN");
 	$oEle = $oOutput->appendChild($oEle);
 		
 	my $oHT = $oOutput->createElement("Timeline");
@@ -34,9 +50,6 @@ if ($#ARGV == 0) {
 		}
 	}
 	dispatch($oOutput, $strURL);
-} else { 
-	print("Usage:  " . $0 . " http://<server>[[:<port>]/<path>]/\n")
-}
 
 sub dispatch {
 	my $oOutput = shift; 
