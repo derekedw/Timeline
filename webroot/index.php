@@ -1,9 +1,19 @@
 <?php
 
+function import_view($tln) {
+	?><form>
+	<textarea rows="40" cols="80"></textarea>
+	</form>
+	<?php
+}
+
 function summary_view($tln, $params) {
 	$run_once = false;
-	if (count($result = $tln->get_view($params)) <= 0)
-		return false;
+	if (count($result = $tln->get_view($params)) <= 0) {
+		import_view($tln);
+		return;
+	}
+		
 	print "<div id=\"contentArea\"><div id=\"report\"><table><tbody> 
 		<thead>
 	    <tr>
@@ -163,14 +173,6 @@ function report_view($tln) {
 	print '</tbody></table></div>';
 }
 
-function canvas_start() {
-	print "<div id=\"canvas\">\n";
-}
-
-function canvas_end() {
-	print "</div>\n";
-}
-
 require_once('tln-config.php');
 require_once('TlnData.php');
 
@@ -193,11 +195,12 @@ if (! $tln->has_tables(TLNDBNAME)) {
 			set_time_limit(300);
 			$tln->import($nodes->item(0)->textContent);
 		}
-	} else { # If information was NOT posted, output is in HTML.
+	} else { 
+		# If information was NOT posted, output is in HTML.
 		include 'header.php';
 		include 'words.php';
 		canvas_start();
-	
+		
 		if (array_key_exists('view', $_GET)) {
 			if ($_GET['view'] == 'detail') {
 				detail_view($tln, $_GET);

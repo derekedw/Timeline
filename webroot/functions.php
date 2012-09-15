@@ -61,4 +61,12 @@ function h2q($my_params) {
 	}
 	return '?' . implode('&', $query);		
 }
+
+function canvas_start() {
+	print "<div id=\"canvas\">\n";
+}
+
+function canvas_end() {
+	print "</div>\n";
+}
 ?>
