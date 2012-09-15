@@ -1,11 +1,11 @@
-#!/bin/bash -x
+#!/bin/bash
 
 echo Tapestry_sift_install.sh
 echo
 echo Installs the Tapestry web application for viewing super timelines
 echo on the SIFT workstation.
 echo 
-echo Author:  Derek Edwards (derekedw@yahoo.com)
+echo Author:  Derek Edwards \(derekedw@yahoo.com\)
 echo
 
 echo Downloading the software
@@ -34,13 +34,11 @@ exit
 EOF
 
 echo Installing webroot files
-sudo mkdir /var/www/Tapestry
-sudo cp -r * /var/www/Tapestry
-
-echo Updating Apache configuration
-
-echo Restarting Apache
-sudo apachectl restart
+if [ ! -d "/var/www/tapestry" ]; then 
+	sudo mkdir /var/www/tapestry
+fi
+sudo cp -r * /var/www/tapestry
 
 echo Opening Firefox to install the database
-firefox http://localhost/Tapestry/install.php
+set +x
+firefox http://localhost/tapestry/install.php
