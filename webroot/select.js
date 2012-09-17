@@ -49,7 +49,6 @@ function selectGroup(id, name, description, color) {
 
 function saveGroup(disableDates,returnParams) {
 	var result="";
-	var i=0;
 	if (selected.length>0) {
 		result = "index.php?color=" + selected[0];
 		result = result + "&name=" + document.getElementById('name').value;

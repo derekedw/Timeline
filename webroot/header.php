@@ -5,6 +5,7 @@
 	<title>Tapestry</title>
 	<link href="tln.css" type="text/css" rel="stylesheet">
 	<script type="text/javascript" src="select.js" ></script>
+	<script type="text/javascript" src="import.js" ></script>
 </head>
-<body>
+<body onload="javascript:onLoad();">
 	<img alt="Tapestry" src="tapestry.png">
