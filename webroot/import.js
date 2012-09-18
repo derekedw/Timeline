@@ -30,9 +30,10 @@ function createRequest() {
 }
 
 SlowStartProto.prototype.getHeader = function() {
-	this.oOutput = document.implementation.createDocument(null, "Timeline", null);
-	var oEle = this.oOutput.createComment("Reading " + this.file.name);
-	oEle = this.oOutput.appendChild(oEle);
+	var oOutput = document.implementation.createDocument(null, "Timeline", null);
+	var oEle = oOutput.createComment("Reading " + this.file.name);
+	oEle = oOutput.appendChild(oEle);
+	return oOutput;
 };
 
 SlowStartProto.prototype.print = function(text) {
@@ -43,36 +44,44 @@ SlowStartProto.prototype.print = function(text) {
 };
 
 SlowStartProto.prototype.dispatch = function(data) {
-	strURL = window.location.href;
-	if (this.oOutput == null)
-		this.getHeader();
-	var oHT = this.oOutput.getElementsByTagName("Timeline");
-	var oData = this.oOutput.createElement("Data");
+	var oOutput = this.getHeader();
+	var oHT = oOutput.getElementsByTagName("Timeline");
+	var oData = oOutput.createElement("Data");
 	oData = oHT[0].appendChild(oData);
+	oData.appendChild(oOutput.createCDATASection(data.join("\n")));
 	
-	oData.appendChild(this.oOutput.createCDATASection(data.join("\n")));
-
-	this.print("[  ] " + " sending to " + strURL + "\n");
-  		
 	// Create a request
 	req = createRequest();
-	/* req.onreadystatechange = function() {
+	req.onreadystatechange = function() {
 		// Check the outcome of the response
-		if (req.readyState == 4) {
-			if (req.status == 200) {
-				proto.print(req.responseText + "\n");
-				proto.print("[" + req.statusText + "] " + "\n");
+		if (this.readyState == 4) {
+			if (this.status == 200) {
+				proto.print(this.responseText + "\n");
+				proto.print("[" + this.statusText + "] " + "\n");
 			} else {
-				proto.print("[" + req.statusText + "] " + "\n");
+				proto.print("[" + this.statusText + "] " + "\n");
 			}
-			proto.oOutput.removeElement(oData);
+			proto.schedule();
 		} 
-	};*/ 
-	req.open("POST", strURL, false);
-	req.send(this.oOutput);	
-	proto.print(req.responseText + "\n");
-	proto.print("[" + req.statusText + "] " + "\n");
-	oHT[0].removeChild(oData);
+	}; 
+	this.schedule(req, oOutput);	
+};
+
+SlowStartProto.prototype.schedule = function(req, oOutput) {
+	if (req && oOutput) {
+		this.queue.push({'request': req, 'data': oOutput});
+	}
+	strURL = window.location.href;
+	for (var i = 0; i < this.slots.length; i++) {
+		if (this.slots[i] == null || this.slots[i].request.readyState == 4) {
+			this.slots[i] = this.queue.shift();
+			if (this.slots[i] != null) {
+				this.print("[  ] " + " sending to " + strURL + "\n");
+				this.slots[i].request.open("POST", strURL, true);
+				this.slots[i].request.send(this.slots[i].data);
+			}
+		} 
+	}
 };
 		
 SlowStartProto.prototype.getStart = function() {
@@ -141,11 +150,12 @@ function SlowStartProto() {
 	// Set the initial start and end byte count at 1400, which should 
 	// fit into a single TCP packet.
 	this.start = 0;
-	this.end = 8192;
-	this.interval = 8192;
+	this.end = 4096;
+	this.interval = 4096;
 	this.minRows = 1000;
 	this.file = null;
 	this.reader = null;
 	this.buf = null;
-	this.oOutput = null;
+	this.queue = new Array();
+	this.slots = new Array(2);
 }
