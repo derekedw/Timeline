@@ -2,7 +2,11 @@
 
 function import_view($tln) {
 	?><form>
-	<textarea rows="40" cols="80"></textarea>
+	<div id="groupform">
+	<input type="file" id="files" name="files[]" multiple />
+	<output id="list"></output>
+	<textarea id="console" rows="40" cols="80"></textarea>
+	</div>
 	</form>
 	<?php
 }
@@ -218,7 +222,9 @@ if (! $tln->has_tables(TLNDBNAME)) {
 				unset($my_params['entries']);
 				detail_view($tln, $my_params);
 			}
-		} else 
+		} else if (array_key_exists('import', $_GET))
+			import_view($tln);
+		else 
 			summary_view($tln, $_GET);
 		canvas_end();
 		include 'footer.php';

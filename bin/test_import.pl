@@ -37,7 +37,7 @@ if ($#ARGV == 1) {
 	my $oDat = $oOutput->createElement("Data");
 	$oDat = $oHT->appendChild($oDat);
 	
-	while(<>) {
+	while(<FILE>) {
 		#print "$_\n";
 		$oDat->appendChild($oOutput->createCDATASection($_));
 		$iLineNo += 1;
