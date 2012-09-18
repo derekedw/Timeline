@@ -1,5 +1,9 @@
 var proto = new SlowStartProto();
 
+/**
+ * Event handler for the selection of a File 
+ * @param evt
+ */
 function handleFileSelect(evt) {
     var files = evt.target.files; // FileList object
     // files is a FileList of File objects. List some properties.
@@ -8,10 +12,17 @@ function handleFileSelect(evt) {
     }
 }
 
+/**
+ * onLoad handler for the import page
+ */
 function onLoad() {
 	document.getElementById('files').addEventListener('change', handleFileSelect, false);
 }
 
+/**
+ * Utility method for creating an XMLHttpRequest
+ * @returns the XHR
+ */
 function createRequest() {
 	try {
 		request = new XMLHttpRequest();
@@ -29,6 +40,10 @@ function createRequest() {
 	return request;
 }
 
+/**
+ * Creates the XML wrapper document
+ * @returns the XML DOM document
+ */
 SlowStartProto.prototype.getHeader = function() {
 	var oOutput = document.implementation.createDocument(null, "Timeline", null);
 	var oEle = oOutput.createComment("Reading " + this.file.name);
@@ -36,6 +51,10 @@ SlowStartProto.prototype.getHeader = function() {
 	return oOutput;
 };
 
+/**
+ * Prints the the HTTP response output to the textarea with 'console' as its ID
+ * @param text the HTTP responseText
+ */
 SlowStartProto.prototype.print = function(text) {
 	// output text to the console
 	var console = document.getElementById("console");
@@ -43,6 +62,11 @@ SlowStartProto.prototype.print = function(text) {
 	console.value = value + text;
 };
 
+/**
+ * Creates an XMLHttpRequest and wraps a number of lines of the input file in 
+ * an XML envelope. 
+ * @param data
+ */
 SlowStartProto.prototype.dispatch = function(data) {
 	var oOutput = this.getHeader();
 	var oHT = oOutput.getElementsByTagName("Timeline");
@@ -67,6 +91,11 @@ SlowStartProto.prototype.dispatch = function(data) {
 	this.schedule(req, oOutput);	
 };
 
+/**
+ * Queues and/or opens an XmlHttpRequest and uses it to send data to the server
+ * @param req the XmlHttpRequest
+ * @param oOutput the file data, wrapped in an XML envelope
+ */
 SlowStartProto.prototype.schedule = function(req, oOutput) {
 	if (req && oOutput) {
 		this.queue.push({'request': req, 'data': oOutput});
@@ -83,15 +112,27 @@ SlowStartProto.prototype.schedule = function(req, oOutput) {
 		} 
 	}
 };
-		
+
+/**
+ * 
+ * @returns {Number} the starting offset of the next file chunk
+ */
 SlowStartProto.prototype.getStart = function() {
 	return this.start;
 };
 
+/**
+ * 
+ * @returns {Number} the ending offset of the next file chunk 
+ */
 SlowStartProto.prototype.getEnd = function() {
 	return this.end;
 };
 
+/**
+ * Selects a file to be read and sent to the server
+ * @param file
+ */
 SlowStartProto.prototype.send = function(file) {
 	this.file = file;
     this.reader = new FileReader();
@@ -100,6 +141,12 @@ SlowStartProto.prototype.send = function(file) {
     this.reader.readAsBinaryString(chunk);    
 };
 
+/**
+ * Adds a fixed-length file chunk to a buffer.  If the buffer is larger than a 
+ * certain number of text lines, all of the buffer, except the last (probably 
+ * partial) line of text is sent 
+ * @param text - text from the file chunk
+ */
 SlowStartProto.prototype.post = function(text) {
 	var done;
 	if (text == '')
@@ -136,6 +183,11 @@ SlowStartProto.prototype.post = function(text) {
 	}
 };
 
+/**
+ * Callback function that handles the loading of a file chunk.
+ * @see SlowStartProto.getStart() SlowStartProto.getEnd() SlowStartProto.post() 
+ * File.slice(); FileReader.readAsBinaryString()
+ */
 function handleChunkLoaded(evt) {
     if (evt.target.readyState == FileReader.DONE) {
     	proto.post(evt.target.result);
@@ -146,6 +198,11 @@ function handleChunkLoaded(evt) {
     }
 }
 
+/**
+ * The idea was of a protocol that would scale the import to MySQL speed as 
+ * fast as possible, in the same way as the slow start protocol did in TCP.
+ * @returns {SlowStartProto}
+ */
 function SlowStartProto() {
 	// Set the initial start and end byte count at 1400, which should 
 	// fit into a single TCP packet.
@@ -158,4 +215,4 @@ function SlowStartProto() {
 	this.buf = null;
 	this.queue = new Array();
 	this.slots = new Array(2);
-}
+};
