@@ -1001,7 +1001,7 @@ class TlnData {
 							$fudge = '';
 						}
 					} else { // into detail view from summary view
-						$op = '<='; 
+						$op = '<'; 
 						$fudge = ':99:99';
 					}
 					$result[] = '(' . $datefield . $op . '\'' . $params['date'] . '\' 
