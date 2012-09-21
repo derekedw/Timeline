@@ -1,4 +1,5 @@
 var proto = new SlowStartProto();
+var progress; 
 
 /**
  * Event handler for the selection of a File 
@@ -20,6 +21,11 @@ function onLoad() {
 	var files = document.getElementById('files');
 	if (files)
 		files.addEventListener('change', handleFileSelect, false);
+	var p = document.getElementById("progress");
+	if (p) {
+		progress = new slider(p);
+		progress.loadImages();
+	}
 }
 
 function redirectToIndex(){
@@ -95,7 +101,7 @@ SlowStartProto.prototype.dispatch = function(data) {
 			proto.schedule();
 		} 
 	}; 
-	this.schedule(req, oOutput);	
+	this.schedule(req, oOutput, this.files[0], data.join("\n").length);	
 };
 
 /**
@@ -103,9 +109,9 @@ SlowStartProto.prototype.dispatch = function(data) {
  * @param req the XmlHttpRequest
  * @param oOutput the file data, wrapped in an XML envelope
  */
-SlowStartProto.prototype.schedule = function(req, oOutput) {
+SlowStartProto.prototype.schedule = function(req, oOutput, file, size) {
 	if (req && oOutput) {
-		this.queue.push({'request': req, 'data': oOutput});
+		this.queue.push({'request': req, 'data': oOutput, 'file': file, 'size': size});
 	}
 	strURL = window.location.href;
 	for (var i = 0; i < this.slots.length; i++) {
@@ -115,6 +121,8 @@ SlowStartProto.prototype.schedule = function(req, oOutput) {
 				this.print("[  ] " + " sending to " + strURL + "\n");
 				this.slots[i].request.open("POST", strURL, true);
 				this.slots[i].request.send(this.slots[i].data);
+				this.bytesSent += this.slots[i].size; 
+				progress.setStatus(this.bytesSent / this.totalBytes * 100);
 			}
 		} 
 	}
@@ -160,6 +168,7 @@ SlowStartProto.prototype.setEnd = function(number) {
  */
 SlowStartProto.prototype.select = function(file) {
 	this.files.push(file);
+	this.totalBytes += file.size;
 };
 
 /**
@@ -295,4 +304,6 @@ function SlowStartProto() {
 	this.buf = null;
 	this.queue = new Array();
 	this.slots = null;
+	this.bytesSent = 0;
+	this.totalBytes = 0;
 };

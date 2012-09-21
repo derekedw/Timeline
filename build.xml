@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
   <project name="Timeline" default="install">
-     <target name="install" depends="copyJavascript,copyImg,copyDate-chooser">
+     <target name="install" depends="copyJavascript,copyImg,copyDate-chooser,copySlider">
         <echo>Copying PHP scripts to server</echo>
         <copy todir="${timeline.docroot}">
         	<fileset dir="webroot">
@@ -32,4 +32,10 @@
   	 		<fileset dir="date-chooser" excludes="*.html" /> 
   	 	</copy>
   	 </target>
+	 <target name="copySlider">
+  	  	 	<echo>Copying slider code to the server</echo>
+  	  	 	<copy todir="${timeline.docroot}/slider">
+  	  	 		<fileset dir="slider" excludes="*.htm" /> 
+  	  	 	</copy>
+  	  </target>
   </project>
