@@ -15,7 +15,10 @@ if (mysqli_connect_errno()) {
 	die('Connect error: ' . mysqli_connect_error());
 }
 
-canvas_start();
+?>
+<div id="groupform">
+<?php 
+
 $tln = new TlnData($db);
 if ($tln->has_tables(TLNDBNAME)) {
 	if ($tln->has_upgrade()) {
@@ -43,9 +46,11 @@ if ($tln->has_tables(TLNDBNAME)) {
 			print $tln->h1('Install unsuccessful');
 	}
 }
-include 'footer.php';	
 $db->close();
-canvas_end();
+?>
+</div>
+<?php 
+include 'footer.php';	
 ?>
 </body>
 </html>

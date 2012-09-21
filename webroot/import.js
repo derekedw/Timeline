@@ -21,6 +21,10 @@ function onLoad() {
 		files.addEventListener('change', handleFileSelect, false);
 }
 
+function redirectToIndex(){
+	window.location = "index.php";
+}
+
 /**
  * Utility method for creating an XMLHttpRequest
  * @returns the XHR
