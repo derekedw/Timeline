@@ -202,7 +202,7 @@ class TlnData {
 		}
 	}
 	function h1($text) {
-		return '<h1>' . $text . '</h1>';
+		return '<p><span style="font-size: 120%;">' . $text . '</span></p>';
 	}
 	private function create_time() {
 		$starttime = time();
@@ -455,7 +455,10 @@ class TlnData {
 														if ($this->create_group()) {
 															if ($this->create_fact_group()) {
 																if ($this->fill_version()) { 
-																	print $this->h1('All done in ' . gmdate("H:i:s", time() - $job->getId()));
+																	print $this->h1('Completed successfully in ' . gmdate("H:i:s", time() - $job->getId()));
+																	print $this->h1("Now let's import some data");
+																	print $this->p('<img src="1x1.png" onload="setTimeout(\'redirectToIndex()\', 5000);">');
+																	print $this->p("You will be redirected in 5 seconds.  If not, please click <a href=\"index.php\" >here</a>.");
 																	return true;
 																}
 															}
