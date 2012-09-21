@@ -8,8 +8,9 @@ function handleFileSelect(evt) {
     var files = evt.target.files; // FileList object
     // files is a FileList of File objects. List some properties.
     for (var i = 0; i < files.length; i++) {
-    	proto.send(files[i]);
+    	proto.select(files[i]);
     }
+    proto.send();
 }
 
 /**
@@ -52,7 +53,7 @@ function createRequest() {
  */
 SlowStartProto.prototype.getHeader = function() {
 	var oOutput = document.implementation.createDocument(null, "Timeline", null);
-	var oEle = oOutput.createComment("Reading " + this.file.name);
+	var oEle = oOutput.createComment("Reading " + this.files[0].name);
 	oEle = oOutput.appendChild(oEle);
 	return oOutput;
 };
@@ -129,10 +130,36 @@ SlowStartProto.prototype.getStart = function() {
 
 /**
  * 
+ * @param number
+ */
+SlowStartProto.prototype.setStart = function(number) {
+	this.start = number;
+};
+
+/**
+ * 
  * @returns {Number} the ending offset of the next file chunk 
  */
 SlowStartProto.prototype.getEnd = function() {
 	return this.end;
+};
+
+/**
+ * 
+ * @param number
+ */
+SlowStartProto.prototype.setEnd = function(number) {
+	this.end = number;
+};
+
+/**
+ * 
+ * 
+ *  
+ * @param file
+ */
+SlowStartProto.prototype.select = function(file) {
+	this.files.push(file);
 };
 
 /**
@@ -141,43 +168,23 @@ SlowStartProto.prototype.getEnd = function() {
  * Ancient browsers, like the Firefox 3.6 (really?!) that's on the current SIFT
  * workstation don't support loading the file 
  * in chunks, so we set up a 500 millisecond timer to load the whole file into RAM and
- * split it. 
- * @param file
+ * split it.
  */
-SlowStartProto.prototype.send = function(file) {
-	this.file = file;
-    this.reader = new FileReader();
-    try {
-	    this.reader.onloadend = handleChunkLoaded;
-	    var chunk = this.file.slice(this.getStart(), this.getEnd());
-	    this.reader.readAsBinaryString(chunk);
-    } catch(e) {
-    	proto.reader.onloadend = function(evt) {
-    		if (evt.target.readyState == FileReader.DONE) {
-    			// Loading the file this way seems to cause deadlock in the 
-    			// database when there are multiple slots for concurrent 
-    			// XMLHttpRequests
-    			proto.slots = new Array(1);
-    			var lines = evt.target.result.split("\n");
-    			while(lines.length > 0) {
-    				var subset = new Array();
-    				var i = 0;
-    				while (i < proto.minRows && lines.length > 0) {
-    					subset.push(lines.shift());
-    					i++;
-    				}
-    				if (lines.length > 0) {
-	    				var last = lines.shift();
-	    				subset.push(last.substring(0,20));
-	    				lines.unshift(last.substring(20));
-    				}
-    				proto.post(subset.join("\n"), window.location.href);
-    			}
-				proto.post('', window.location.href);
-    		}
-    	};
-    	proto.reader.readAsText(file);
-    }
+SlowStartProto.prototype.send = function() {
+	if (this.files.length > 0) {
+		this.setStart(0);
+		this.setEnd(this.interval);
+		var file = this.files[0];
+	    try {
+	    	this.reader = new FileReader();
+		    this.reader.onloadend = handleChunkLoaded;
+		    var chunk = file.slice(this.getStart(), this.getEnd());
+		    this.reader.readAsBinaryString(chunk);
+	    } catch(e) {
+	    	this.reader.onloadend = handleFileLoaded;
+	    	this.reader.readAsText(file);
+	    }
+	}
 };
 
 /**
@@ -220,7 +227,36 @@ SlowStartProto.prototype.post = function(text) {
 		this.buf = new Array();
 		this.buf[0] = newbuf;
 	}
+	if (done) {
+		this.files.shift();
+		this.send();
+	}
 };
+
+function handleFileLoaded(evt) {
+	if (evt.target.readyState == FileReader.DONE) {
+		// Loading the file this way seems to cause deadlock in the 
+		// database when there are multiple slots for concurrent 
+		// XMLHttpRequests
+		proto.slots = new Array(1);
+		var lines = evt.target.result.split("\n");
+		while(lines.length > 0) {
+			var subset = new Array();
+			var i = 0;
+			while (i < proto.minRows && lines.length > 0) {
+				subset.push(lines.shift());
+				i++;
+			}
+			if (lines.length > 0) {
+				var last = lines.shift();
+				subset.push(last.substring(0,20));
+				lines.unshift(last.substring(20));
+			}
+			proto.post(subset.join("\n"), window.location.href);
+		}
+		proto.post('', window.location.href);
+	}
+}
 
 /**
  * Callback function that handles the loading of a file chunk.
@@ -228,7 +264,7 @@ SlowStartProto.prototype.post = function(text) {
  * File.slice(); FileReader.readAsBinaryString()
  */
 function handleChunkLoaded(evt) {
-	// Having multiple slots for concurrent XMLHttpRequests seems to work 
+	// Having multiple slots for concurrent XMLHttpRequests seems to work
 	// when loading the file this way 
 	if (proto.slots == null) {
 		proto.slots = new Array(2);
@@ -236,7 +272,7 @@ function handleChunkLoaded(evt) {
     if (evt.target.readyState == FileReader.DONE) {
     	proto.post(evt.target.result);
     	if (evt.target.result != '') {
-	    	var chunk = proto.file.slice(proto.getStart(), proto.getEnd());
+	    	var chunk = proto.files[0].slice(proto.getStart(), proto.getEnd());
 	        evt.target.readAsBinaryString(chunk);
     	}
     }
@@ -254,7 +290,7 @@ function SlowStartProto() {
 	this.end = 4096;
 	this.interval = 4096;
 	this.minRows = 1000;
-	this.file = null;
+	this.files = new Array();
 	this.reader = null;
 	this.buf = null;
 	this.queue = new Array();

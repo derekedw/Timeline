@@ -3,6 +3,7 @@
 function import_view($tln) {
 	?><form>
 	<div id="groupform">
+	<p>Choose log2timeline .CSV files to be imported:</p>
 	<input type="file" id="files" name="files[]" multiple />
 	<output id="list"></output>
 	<textarea id="console" rows="40" cols="80"></textarea>
