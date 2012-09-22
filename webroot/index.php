@@ -83,7 +83,7 @@ function detail_view($tln, $params) {
 	$result = $tln->get_detail_view($params);
 	$run_once = false;
 	if (count($result) > 0) {
-		print "<div id=\"report\"><table><thead>
+		print "<div id=\"contentArea\"><table><thead>
     <tr>
       <th>Count</th>
       <th>Date</th>
@@ -204,8 +204,6 @@ if (! $tln->has_tables(TLNDBNAME)) {
 	} else { 
 		# If information was NOT posted, output is in HTML.
 		include 'header.php';
-		include 'words.php';
-		canvas_start();
 		
 		if (array_key_exists('view', $_GET)) {
 			if ($_GET['view'] == 'detail') {

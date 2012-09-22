@@ -1,8 +1,3 @@
-<html>
-<head>
-<title>Tapestry Setup</title>
-</head>
-<body>
 <?php
 include 'header.php';
 require_once('tln-config.php');
@@ -52,5 +47,3 @@ $db->close();
 <?php 
 include 'footer.php';	
 ?>
-</body>
-</html>

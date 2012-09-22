@@ -7,7 +7,7 @@ font-family:Verdana, Arial, sans-serif;
 color:white;
 }
 tr td {
-background-color: #EFEBFF;
+background-color: #F7F5FF;
 color: black;
 padding: 2px;
 }
@@ -76,15 +76,17 @@ top:75px;
 right: 0px;
 left: 0px;
 }
+#menubar {
+	margin: auto;
+	width: 440px;
+}
 #contentArea {
-padding:5px 10px;
-width:1050px;
+padding: 10px 10px;
 margin:auto;
 border-right: 3px solid #333;
 border-bottom: 3px solid #333;
 }
-#report {
-top:75px;
+div.clear {
 clear:both;
 }
 #groupform {
@@ -118,8 +120,16 @@ ul {
 list-style-type:none;
 }
 ul.nav {
-float:right;
-margin:0;
+margin: 5px auto 5px auto;
+padding: 5px;
+background-color:white;
+color:black;
+border:3px solid black;
+display: inline;
+}
+ul.nav li {
+padding: 15px;
+display:inline;
 }
 #wordSelector {
 position:absolute;
@@ -144,9 +154,6 @@ background-color:lavender;
 li {
 display:block;
 }
-ul.nav li {
-display:inline;
-}
 li.selected {
 background-color:#ffffcc;
 padding:5px;
@@ -160,7 +167,7 @@ border-right: 3px solid #333;
 border-bottom: 3px solid #333;
 padding: 3px; 
 margin: 3px;
-background-color: #EFEBFF;
+background-color: #F7F5FF;
 } 
 
 ul li:hover ul { 

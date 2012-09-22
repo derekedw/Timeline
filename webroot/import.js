@@ -273,10 +273,10 @@ function handleFileLoaded(evt) {
  * File.slice(); FileReader.readAsBinaryString()
  */
 function handleChunkLoaded(evt) {
-	// Having multiple slots for concurrent XMLHttpRequests seems to work
+	// Having multiple slots for concurrent XMLHttpRequests does not seem to work
 	// when loading the file this way 
 	if (proto.slots == null) {
-		proto.slots = new Array(2);
+		proto.slots = new Array(1);
 	}
     if (evt.target.readyState == FileReader.DONE) {
     	proto.post(evt.target.result);

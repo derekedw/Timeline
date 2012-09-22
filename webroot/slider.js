@@ -14,13 +14,6 @@ function loadImages() {
 }
 
 function setStatus(percent) {
-	if (this.displayed==false) {
-		this.container.appendChild(this.imgLeft);
-		this.container.appendChild(this.imgSlider);
-		this.container.appendChild(this.imgRight);
-		this.container.appendChild(this.imgBlank);
-		this.displayed=true;
-	}
 	if (percent > (6*100/this.width)) {
 		// display left, right, center, blank images
 		this.imgLeft.width=3;
@@ -32,6 +25,13 @@ function setStatus(percent) {
 }
 
 function reset() {
+	if (this.displayed==false) {
+		this.container.appendChild(this.imgLeft);
+		this.container.appendChild(this.imgSlider);
+		this.container.appendChild(this.imgRight);
+		this.container.appendChild(this.imgBlank);
+		this.displayed=true;
+	}
 	this.imgLeft.width=0;
 	this.imgSlider.width=0;
 	this.imgRight.width=0;
@@ -46,10 +46,11 @@ function slider(outer) {
 	this.container.style.display = "inline"; 
 	this.container.style.border = "1px solid black"; 
 	this.container.style.padding = "0px"; 
-	this.container.style.margin = "5px";
+	this.outer.style.margin = "5px";
 	this.width=200;
 	this.displayed=false;
 	// methods
 	this.loadImages=loadImages;
 	this.setStatus=setStatus;
+	this.reset=reset;
 }
