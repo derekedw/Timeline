@@ -9,4 +9,4 @@
 	<script type="text/javascript" src="slider.js" ></script>
 </head>
 <body onload="javascript:onLoad();">
-	<img alt="Tapestry" src="tapestry.png">
+	<img alt="Tapestry" src="Tapestry.png">

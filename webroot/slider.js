@@ -5,11 +5,12 @@ function loadImages() {
 	this.imgRight=new Image(3, 16);
 	this.imgRight.src="slider/sliderR.jpg";
 	this.imgSlider=new Image(2, 16);
-	this.imgSlider.src="slider/slider.jpg";
+	this.imgSlider.src="slider/Slider.jpg";
 	this.imgBlank=new Image(1, 16);
 	this.imgBlank.src="slider/1x1.gif";
 	this.container.width = this.width + 2;
 	this.container.height = this.imgLeft.height + 2;
+	this.reset();
 }
 
 function setStatus(percent) {
@@ -26,12 +27,15 @@ function setStatus(percent) {
 		this.imgRight.width=3;
 		this.imgSlider.width=(percent*this.width/100)-6;
 		this.imgBlank.width=(100-percent)*this.width/100;
-	} else {
-		this.imgLeft.width=0;
-		this.imgSlider.width=0;
-		this.imgRight.width=0;
-		this.imgBlank.width=this.width;
-	}
+	} else 
+		this.reset();
+}
+
+function reset() {
+	this.imgLeft.width=0;
+	this.imgSlider.width=0;
+	this.imgRight.width=0;
+	this.imgBlank.width=this.width;
 }
 
 function slider(outer) {
