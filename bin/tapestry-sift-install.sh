@@ -39,6 +39,10 @@ if [ ! -d "/var/www/tapestry" ]; then
 fi
 sudo cp -r * /var/www/tapestry
 
+echo Installing slider and date-chooser files
+cd ..
+sudo cp -r slider date-chooser /var/www/tapestry
+
 echo Opening Firefox to install the database
 set +x
 firefox http://localhost/tapestry/install.php
